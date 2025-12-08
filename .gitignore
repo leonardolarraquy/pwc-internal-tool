@@ -1,0 +1,55 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# H2 Database
+*.mv.db
+*.trace.db
+data/
+
+# Node/Frontend
+node_modules/
+dist/
+frontend/dist/
+frontend/node_modules/
+frontend/.next/
+
+# Compiled frontend files (copied to static resources)
+src/main/resources/static/assets/
+src/main/resources/static/index.html
+
+# Environment
+.env
+.env.local
+
+excels/
+
+
+
+
+
+

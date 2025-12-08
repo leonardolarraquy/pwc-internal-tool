@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  pwc-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pwc-admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - pwc-data:/app/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    restart: unless-stopped
+
+volumes:
+  pwc-data:
+    driver: local
+
