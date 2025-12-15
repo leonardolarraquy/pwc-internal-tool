@@ -97,9 +97,9 @@ public class OrganizationDetailController {
         return ResponseEntity.ok(response);
     }
     
-    @PostMapping("/{id}/assign-user")
+    @PostMapping("/{id}/assign-employee")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> assignUserToOrganization(
+    public ResponseEntity<Map<String, Object>> assignEmployeeToOrganization(
             @PathVariable Long id,
             @Valid @RequestBody AssignUserToOrganizationDTO assignDTO) {
         
@@ -110,7 +110,7 @@ public class OrganizationDetailController {
         
         if ("Gift".equalsIgnoreCase(organizationType)) {
             GiftAssignmentCreateDTO createDTO = new GiftAssignmentCreateDTO();
-            createDTO.setUserId(assignDTO.getUserId());
+            createDTO.setEmployeeId(assignDTO.getUserId());
             createDTO.setOrganizationDetailId(id);
             createDTO.setFinGiftFinancialAnalyst(assignDTO.getFinGiftFinancialAnalyst());
             createDTO.setFinGiftManager(assignDTO.getFinGiftManager());
@@ -121,7 +121,7 @@ public class OrganizationDetailController {
             response.put("type", "Gift");
         } else if ("Academic Unit".equalsIgnoreCase(organizationType)) {
             AcademicUnitAssignmentCreateDTO createDTO = new AcademicUnitAssignmentCreateDTO();
-            createDTO.setUserId(assignDTO.getUserId());
+            createDTO.setEmployeeId(assignDTO.getUserId());
             createDTO.setOrganizationDetailId(id);
             createDTO.setHcmAcademicChairAu(assignDTO.getHcmAcademicChairAu());
             createDTO.setHcmAcademicDeanAuh(assignDTO.getHcmAcademicDeanAuh());
@@ -135,17 +135,17 @@ public class OrganizationDetailController {
             response.put("type", "AcademicUnit");
         } else if ("Company".equalsIgnoreCase(organizationType)) {
             CompanyAssignmentCreateDTO createDTO = new CompanyAssignmentCreateDTO();
-            createDTO.setUserId(assignDTO.getUserId());
+            createDTO.setEmployeeId(assignDTO.getUserId());
             createDTO.setOrganizationDetailId(id);
             
             CompanyAssignmentDTO assignment = companyAssignmentService.createCompanyAssignment(createDTO);
             response.put("assignment", assignment);
             response.put("type", "Company");
         } else {
-            throw new RuntimeException("Cannot assign user to organization of type: " + organizationType);
+            throw new RuntimeException("Cannot assign employee to organization of type: " + organizationType);
         }
         
-        response.put("message", "User successfully assigned to organization");
+        response.put("message", "Employee successfully assigned to organization");
         return ResponseEntity.ok(response);
     }
     

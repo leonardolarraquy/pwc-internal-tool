@@ -24,13 +24,12 @@ public class DataInitializer implements CommandLineRunner {
         // Create default admin user if it doesn't exist
         if (!userRepository.findByEmail("admin@pwc.com").isPresent()) {
             User admin = new User();
-            admin.setEmployeeId("ADMIN001");
             admin.setFirstName("Admin");
             admin.setLastName("User");
+            admin.setCompany("PWC");
             admin.setEmail("admin@pwc.com");
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRole(Role.ADMIN);
-            admin.setPositionTitle("System Administrator");
             
             userRepository.save(admin);
             System.out.println("Default admin user created: admin@pwc.com / admin123");

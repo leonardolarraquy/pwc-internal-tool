@@ -4,11 +4,9 @@ import com.pwc.model.Role;
 import jakarta.validation.constraints.Email;
 
 public class UserUpdateDTO {
-    private String employeeId;
     private String firstName;
     private String lastName;
-    private String positionId;
-    private String positionTitle;
+    private String company;
     
     @Email(message = "Email must be valid")
     private String email;
@@ -18,16 +16,12 @@ public class UserUpdateDTO {
     private Boolean companyAssignmentsAccess;
     private Boolean academicUnitAssignmentsAccess;
     private Boolean giftAssignmentsAccess;
+    private Boolean locationAssignmentsAccess;
+    private Boolean projectAssignmentsAccess;
+    private Boolean grantAssignmentsAccess;
+    private Boolean paygroupAssignmentsAccess;
     
     public UserUpdateDTO() {
-    }
-    
-    public String getEmployeeId() {
-        return employeeId;
-    }
-    
-    public void setEmployeeId(String employeeId) {
-        this.employeeId = employeeId;
     }
     
     public String getFirstName() {
@@ -46,20 +40,12 @@ public class UserUpdateDTO {
         this.lastName = lastName;
     }
     
-    public String getPositionId() {
-        return positionId;
+    public String getCompany() {
+        return company;
     }
     
-    public void setPositionId(String positionId) {
-        this.positionId = positionId;
-    }
-    
-    public String getPositionTitle() {
-        return positionTitle;
-    }
-    
-    public void setPositionTitle(String positionTitle) {
-        this.positionTitle = positionTitle;
+    public void setCompany(String company) {
+        this.company = company;
     }
     
     public String getEmail() {
@@ -109,6 +95,36 @@ public class UserUpdateDTO {
     public void setGiftAssignmentsAccess(Boolean giftAssignmentsAccess) {
         this.giftAssignmentsAccess = giftAssignmentsAccess;
     }
+    
+    public Boolean getLocationAssignmentsAccess() {
+        return locationAssignmentsAccess;
+    }
+    
+    public void setLocationAssignmentsAccess(Boolean locationAssignmentsAccess) {
+        this.locationAssignmentsAccess = locationAssignmentsAccess;
+    }
+    
+    public Boolean getProjectAssignmentsAccess() {
+        return projectAssignmentsAccess;
+    }
+    
+    public void setProjectAssignmentsAccess(Boolean projectAssignmentsAccess) {
+        this.projectAssignmentsAccess = projectAssignmentsAccess;
+    }
+    
+    public Boolean getGrantAssignmentsAccess() {
+        return grantAssignmentsAccess;
+    }
+    
+    public void setGrantAssignmentsAccess(Boolean grantAssignmentsAccess) {
+        this.grantAssignmentsAccess = grantAssignmentsAccess;
+    }
+    
+    public Boolean getPaygroupAssignmentsAccess() {
+        return paygroupAssignmentsAccess;
+    }
+    
+    public void setPaygroupAssignmentsAccess(Boolean paygroupAssignmentsAccess) {
+        this.paygroupAssignmentsAccess = paygroupAssignmentsAccess;
+    }
 }
-
-

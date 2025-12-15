@@ -37,14 +37,14 @@ public class GiftAssignmentController {
         return ResponseEntity.ok(assignment);
     }
     
-    @GetMapping("/user/{userId}")
+    @GetMapping("/employee/{employeeId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PageResponse<GiftAssignmentDTO>> getGiftAssignmentsByUser(
-            @PathVariable Long userId,
+    public ResponseEntity<PageResponse<GiftAssignmentDTO>> getGiftAssignmentsByEmployee(
+            @PathVariable Long employeeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size) {
         
-        PageResponse<GiftAssignmentDTO> response = giftAssignmentService.getGiftAssignmentsByUser(userId, page, size);
+        PageResponse<GiftAssignmentDTO> response = giftAssignmentService.getGiftAssignmentsByEmployee(employeeId, page, size);
         return ResponseEntity.ok(response);
     }
     

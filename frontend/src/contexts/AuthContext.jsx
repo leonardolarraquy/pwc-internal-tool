@@ -50,6 +50,22 @@ export const AuthProvider = ({ children }) => {
     return user?.giftAssignmentsAccess === true
   }
 
+  const hasLocationAssignmentsAccess = () => {
+    return user?.locationAssignmentsAccess === true
+  }
+
+  const hasProjectAssignmentsAccess = () => {
+    return user?.projectAssignmentsAccess === true
+  }
+
+  const hasGrantAssignmentsAccess = () => {
+    return user?.grantAssignmentsAccess === true
+  }
+
+  const hasPaygroupAssignmentsAccess = () => {
+    return user?.paygroupAssignmentsAccess === true
+  }
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -59,6 +75,10 @@ export const AuthProvider = ({ children }) => {
       hasCompanyAssignmentsAccess,
       hasAcademicUnitAssignmentsAccess,
       hasGiftAssignmentsAccess,
+      hasLocationAssignmentsAccess,
+      hasProjectAssignmentsAccess,
+      hasGrantAssignmentsAccess,
+      hasPaygroupAssignmentsAccess,
       loading 
     }}>
       {children}

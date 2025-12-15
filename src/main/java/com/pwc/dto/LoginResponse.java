@@ -12,6 +12,10 @@ public class LoginResponse {
     private Boolean companyAssignmentsAccess = false;
     private Boolean academicUnitAssignmentsAccess = false;
     private Boolean giftAssignmentsAccess = false;
+    private Boolean locationAssignmentsAccess = false;
+    private Boolean projectAssignmentsAccess = false;
+    private Boolean grantAssignmentsAccess = false;
+    private Boolean paygroupAssignmentsAccess = false;
     
     public LoginResponse() {
     }
@@ -95,6 +99,38 @@ public class LoginResponse {
     
     public void setGiftAssignmentsAccess(Boolean giftAssignmentsAccess) {
         this.giftAssignmentsAccess = giftAssignmentsAccess;
+    }
+    
+    public Boolean getLocationAssignmentsAccess() {
+        return locationAssignmentsAccess;
+    }
+    
+    public void setLocationAssignmentsAccess(Boolean locationAssignmentsAccess) {
+        this.locationAssignmentsAccess = locationAssignmentsAccess;
+    }
+    
+    public Boolean getProjectAssignmentsAccess() {
+        return projectAssignmentsAccess;
+    }
+    
+    public void setProjectAssignmentsAccess(Boolean projectAssignmentsAccess) {
+        this.projectAssignmentsAccess = projectAssignmentsAccess;
+    }
+    
+    public Boolean getGrantAssignmentsAccess() {
+        return grantAssignmentsAccess;
+    }
+    
+    public void setGrantAssignmentsAccess(Boolean grantAssignmentsAccess) {
+        this.grantAssignmentsAccess = grantAssignmentsAccess;
+    }
+    
+    public Boolean getPaygroupAssignmentsAccess() {
+        return paygroupAssignmentsAccess;
+    }
+    
+    public void setPaygroupAssignmentsAccess(Boolean paygroupAssignmentsAccess) {
+        this.paygroupAssignmentsAccess = paygroupAssignmentsAccess;
     }
 }
 

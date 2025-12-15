@@ -2,11 +2,13 @@ package com.pwc.service;
 
 import com.pwc.dto.*;
 import com.pwc.model.CompanyAssignment;
+import com.pwc.model.Employee;
 import com.pwc.model.OrganizationDetail;
 import com.pwc.model.User;
 import com.pwc.repository.CompanyAssignmentRepository;
+import com.pwc.repository.EmployeeRepository;
 import com.pwc.repository.OrganizationDetailRepository;
-import com.pwc.repository.UserRepository;
+import com.pwc.util.SecurityUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,16 +23,19 @@ import java.util.stream.Collectors;
 public class CompanyAssignmentService {
     
     private final CompanyAssignmentRepository companyAssignmentRepository;
-    private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
     private final OrganizationDetailRepository organizationDetailRepository;
+    private final SecurityUtil securityUtil;
     
     public CompanyAssignmentService(
             CompanyAssignmentRepository companyAssignmentRepository,
-            UserRepository userRepository,
-            OrganizationDetailRepository organizationDetailRepository) {
+            EmployeeRepository employeeRepository,
+            OrganizationDetailRepository organizationDetailRepository,
+            SecurityUtil securityUtil) {
         this.companyAssignmentRepository = companyAssignmentRepository;
-        this.userRepository = userRepository;
+        this.employeeRepository = employeeRepository;
         this.organizationDetailRepository = organizationDetailRepository;
+        this.securityUtil = securityUtil;
     }
     
     public PageResponse<CompanyAssignmentDTO> getAllCompanyAssignments(int page, int size, String sortBy, String sortDir, String search) {
@@ -61,9 +66,9 @@ public class CompanyAssignmentService {
         );
     }
     
-    public PageResponse<CompanyAssignmentDTO> getCompanyAssignmentsByUser(Long userId, int page, int size) {
+    public PageResponse<CompanyAssignmentDTO> getCompanyAssignmentsByEmployee(Long employeeId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<CompanyAssignment> assignmentPage = companyAssignmentRepository.findByUserId(userId, pageable);
+        Page<CompanyAssignment> assignmentPage = companyAssignmentRepository.findByEmployeeId(employeeId, pageable);
         
         List<CompanyAssignmentDTO> content = assignmentPage.getContent().stream()
                 .map(this::convertToDTO)
@@ -87,8 +92,8 @@ public class CompanyAssignmentService {
     
     @Transactional
     public CompanyAssignmentDTO createCompanyAssignment(CompanyAssignmentCreateDTO createDTO) {
-        User user = userRepository.findById(createDTO.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Employee employee = employeeRepository.findById(createDTO.getEmployeeId())
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
         
         OrganizationDetail organizationDetail = organizationDetailRepository.findById(createDTO.getOrganizationDetailId())
                 .orElseThrow(() -> new RuntimeException("Organization detail not found"));
@@ -99,13 +104,12 @@ public class CompanyAssignmentService {
         }
         
         // Check for duplicate
-        if (companyAssignmentRepository.existsByUserAndOrganizationDetail(user, organizationDetail)) {
-            throw new RuntimeException("Company assignment already exists for this user and organization");
+        if (companyAssignmentRepository.existsByEmployeeAndOrganizationDetail(employee, organizationDetail)) {
+            throw new RuntimeException("Company assignment already exists for this employee and organization");
         }
         
-        CompanyAssignment assignment = new CompanyAssignment();
-        assignment.setUser(user);
-        assignment.setOrganizationDetail(organizationDetail);
+        User currentUser = securityUtil.getCurrentUser();
+        CompanyAssignment assignment = new CompanyAssignment(employee, organizationDetail, currentUser);
         
         CompanyAssignment saved = companyAssignmentRepository.save(assignment);
         return convertToDTO(saved);
@@ -145,12 +149,12 @@ public class CompanyAssignmentService {
         CompanyAssignmentDTO dto = new CompanyAssignmentDTO();
         dto.setId(assignment.getId());
         
-        User user = assignment.getUser();
-        dto.setUserId(user.getId());
-        dto.setUserFirstName(user.getFirstName());
-        dto.setUserLastName(user.getLastName());
-        dto.setUserEmail(user.getEmail());
-        dto.setUserEmployeeId(user.getEmployeeId());
+        Employee employee = assignment.getEmployee();
+        dto.setEmployeeId(employee.getId());
+        dto.setEmployeeFirstName(employee.getFirstName());
+        dto.setEmployeeLastName(employee.getLastName());
+        dto.setEmployeeEmail(employee.getEmail());
+        dto.setEmployeeEmployeeId(employee.getEmployeeId());
         
         OrganizationDetail orgDetail = assignment.getOrganizationDetail();
         dto.setOrganizationDetailId(orgDetail.getId());
@@ -161,6 +165,9 @@ public class CompanyAssignmentService {
         return dto;
     }
 }
+
+
+
 
 
 

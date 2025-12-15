@@ -4,19 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "gift_assignments")
-public class GiftAssignment {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_detail_id", nullable = false)
-    private OrganizationDetail organizationDetail;
+public class GiftAssignment extends BaseAssignment {
     
     @Column(name = "fin_gift_financial_analyst")
     private Boolean finGiftFinancialAnalyst = false;
@@ -28,36 +16,14 @@ public class GiftAssignment {
     private Boolean finProfessorshipPartnerGift = false;
     
     public GiftAssignment() {
+        super();
     }
     
-    public GiftAssignment(User user, OrganizationDetail organizationDetail) {
-        this.user = user;
-        this.organizationDetail = organizationDetail;
-    }
-    
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public User getUser() {
-        return user;
-    }
-    
-    public void setUser(User user) {
-        this.user = user;
-    }
-    
-    public OrganizationDetail getOrganizationDetail() {
-        return organizationDetail;
-    }
-    
-    public void setOrganizationDetail(OrganizationDetail organizationDetail) {
-        this.organizationDetail = organizationDetail;
+    public GiftAssignment(Employee employee, OrganizationDetail organizationDetail, User createdBy) {
+        super();
+        setEmployee(employee);
+        setOrganizationDetail(organizationDetail);
+        setCreatedBy(createdBy);
     }
     
     public Boolean getFinGiftFinancialAnalyst() {
@@ -84,6 +50,9 @@ public class GiftAssignment {
         this.finProfessorshipPartnerGift = finProfessorshipPartnerGift;
     }
 }
+
+
+
 
 
 

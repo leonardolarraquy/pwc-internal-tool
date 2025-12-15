@@ -1,12 +1,14 @@
 package com.pwc.service;
 
 import com.pwc.dto.*;
+import com.pwc.model.Employee;
 import com.pwc.model.GiftAssignment;
 import com.pwc.model.OrganizationDetail;
 import com.pwc.model.User;
+import com.pwc.repository.EmployeeRepository;
 import com.pwc.repository.GiftAssignmentRepository;
 import com.pwc.repository.OrganizationDetailRepository;
-import com.pwc.repository.UserRepository;
+import com.pwc.util.SecurityUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,16 +23,19 @@ import java.util.stream.Collectors;
 public class GiftAssignmentService {
     
     private final GiftAssignmentRepository giftAssignmentRepository;
-    private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
     private final OrganizationDetailRepository organizationDetailRepository;
+    private final SecurityUtil securityUtil;
     
     public GiftAssignmentService(
             GiftAssignmentRepository giftAssignmentRepository,
-            UserRepository userRepository,
-            OrganizationDetailRepository organizationDetailRepository) {
+            EmployeeRepository employeeRepository,
+            OrganizationDetailRepository organizationDetailRepository,
+            SecurityUtil securityUtil) {
         this.giftAssignmentRepository = giftAssignmentRepository;
-        this.userRepository = userRepository;
+        this.employeeRepository = employeeRepository;
         this.organizationDetailRepository = organizationDetailRepository;
+        this.securityUtil = securityUtil;
     }
     
     public PageResponse<GiftAssignmentDTO> getAllGiftAssignments(int page, int size, String sortBy, String sortDir, String search) {
@@ -61,9 +66,9 @@ public class GiftAssignmentService {
         );
     }
     
-    public PageResponse<GiftAssignmentDTO> getGiftAssignmentsByUser(Long userId, int page, int size) {
+    public PageResponse<GiftAssignmentDTO> getGiftAssignmentsByEmployee(Long employeeId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<GiftAssignment> assignmentPage = giftAssignmentRepository.findByUserId(userId, pageable);
+        Page<GiftAssignment> assignmentPage = giftAssignmentRepository.findByEmployeeId(employeeId, pageable);
         
         List<GiftAssignmentDTO> content = assignmentPage.getContent().stream()
                 .map(this::convertToDTO)
@@ -87,8 +92,8 @@ public class GiftAssignmentService {
     
     @Transactional
     public GiftAssignmentDTO createGiftAssignment(GiftAssignmentCreateDTO createDTO) {
-        User user = userRepository.findById(createDTO.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Employee employee = employeeRepository.findById(createDTO.getEmployeeId())
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
         
         OrganizationDetail organizationDetail = organizationDetailRepository.findById(createDTO.getOrganizationDetailId())
                 .orElseThrow(() -> new RuntimeException("Organization detail not found"));
@@ -99,13 +104,12 @@ public class GiftAssignmentService {
         }
         
         // Check for duplicate
-        if (giftAssignmentRepository.existsByUserAndOrganizationDetail(user, organizationDetail)) {
-            throw new RuntimeException("Gift assignment already exists for this user and organization");
+        if (giftAssignmentRepository.existsByEmployeeAndOrganizationDetail(employee, organizationDetail)) {
+            throw new RuntimeException("Gift assignment already exists for this employee and organization");
         }
         
-        GiftAssignment assignment = new GiftAssignment();
-        assignment.setUser(user);
-        assignment.setOrganizationDetail(organizationDetail);
+        User currentUser = securityUtil.getCurrentUser();
+        GiftAssignment assignment = new GiftAssignment(employee, organizationDetail, currentUser);
         assignment.setFinGiftFinancialAnalyst(createDTO.getFinGiftFinancialAnalyst());
         assignment.setFinGiftManager(createDTO.getFinGiftManager());
         assignment.setFinProfessorshipPartnerGift(createDTO.getFinProfessorshipPartnerGift());
@@ -155,12 +159,12 @@ public class GiftAssignmentService {
         GiftAssignmentDTO dto = new GiftAssignmentDTO();
         dto.setId(assignment.getId());
         
-        User user = assignment.getUser();
-        dto.setUserId(user.getId());
-        dto.setUserFirstName(user.getFirstName());
-        dto.setUserLastName(user.getLastName());
-        dto.setUserEmail(user.getEmail());
-        dto.setUserEmployeeId(user.getEmployeeId());
+        Employee employee = assignment.getEmployee();
+        dto.setEmployeeId(employee.getId());
+        dto.setEmployeeFirstName(employee.getFirstName());
+        dto.setEmployeeLastName(employee.getLastName());
+        dto.setEmployeeEmail(employee.getEmail());
+        dto.setEmployeeEmployeeId(employee.getEmployeeId());
         
         OrganizationDetail orgDetail = assignment.getOrganizationDetail();
         dto.setOrganizationDetailId(orgDetail.getId());
@@ -175,6 +179,9 @@ public class GiftAssignmentService {
         return dto;
     }
 }
+
+
+
 
 
 

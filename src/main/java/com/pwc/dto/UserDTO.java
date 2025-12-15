@@ -4,32 +4,36 @@ import com.pwc.model.Role;
 
 public class UserDTO {
     private Long id;
-    private String employeeId;
     private String firstName;
     private String lastName;
-    private String positionId;
-    private String positionTitle;
+    private String company;
     private String email;
     private Role role;
     private Boolean companyAssignmentsAccess;
     private Boolean academicUnitAssignmentsAccess;
     private Boolean giftAssignmentsAccess;
+    private Boolean locationAssignmentsAccess;
+    private Boolean projectAssignmentsAccess;
+    private Boolean grantAssignmentsAccess;
+    private Boolean paygroupAssignmentsAccess;
     
     public UserDTO() {
     }
     
-    public UserDTO(Long id, String employeeId, String firstName, String lastName, String positionId, String positionTitle, String email, Role role, Boolean companyAssignmentsAccess, Boolean academicUnitAssignmentsAccess, Boolean giftAssignmentsAccess) {
+    public UserDTO(Long id, String firstName, String lastName, String company, String email, Role role, Boolean companyAssignmentsAccess, Boolean academicUnitAssignmentsAccess, Boolean giftAssignmentsAccess, Boolean locationAssignmentsAccess, Boolean projectAssignmentsAccess, Boolean grantAssignmentsAccess, Boolean paygroupAssignmentsAccess) {
         this.id = id;
-        this.employeeId = employeeId;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.positionId = positionId;
-        this.positionTitle = positionTitle;
+        this.company = company;
         this.email = email;
         this.role = role;
         this.companyAssignmentsAccess = companyAssignmentsAccess;
         this.academicUnitAssignmentsAccess = academicUnitAssignmentsAccess;
         this.giftAssignmentsAccess = giftAssignmentsAccess;
+        this.locationAssignmentsAccess = locationAssignmentsAccess;
+        this.projectAssignmentsAccess = projectAssignmentsAccess;
+        this.grantAssignmentsAccess = grantAssignmentsAccess;
+        this.paygroupAssignmentsAccess = paygroupAssignmentsAccess;
     }
     
     public Long getId() {
@@ -38,14 +42,6 @@ public class UserDTO {
     
     public void setId(Long id) {
         this.id = id;
-    }
-    
-    public String getEmployeeId() {
-        return employeeId;
-    }
-    
-    public void setEmployeeId(String employeeId) {
-        this.employeeId = employeeId;
     }
     
     public String getFirstName() {
@@ -64,20 +60,12 @@ public class UserDTO {
         this.lastName = lastName;
     }
     
-    public String getPositionId() {
-        return positionId;
+    public String getCompany() {
+        return company;
     }
     
-    public void setPositionId(String positionId) {
-        this.positionId = positionId;
-    }
-    
-    public String getPositionTitle() {
-        return positionTitle;
-    }
-    
-    public void setPositionTitle(String positionTitle) {
-        this.positionTitle = positionTitle;
+    public void setCompany(String company) {
+        this.company = company;
     }
     
     public String getEmail() {
@@ -119,6 +107,36 @@ public class UserDTO {
     public void setGiftAssignmentsAccess(Boolean giftAssignmentsAccess) {
         this.giftAssignmentsAccess = giftAssignmentsAccess;
     }
+    
+    public Boolean getLocationAssignmentsAccess() {
+        return locationAssignmentsAccess;
+    }
+    
+    public void setLocationAssignmentsAccess(Boolean locationAssignmentsAccess) {
+        this.locationAssignmentsAccess = locationAssignmentsAccess;
+    }
+    
+    public Boolean getProjectAssignmentsAccess() {
+        return projectAssignmentsAccess;
+    }
+    
+    public void setProjectAssignmentsAccess(Boolean projectAssignmentsAccess) {
+        this.projectAssignmentsAccess = projectAssignmentsAccess;
+    }
+    
+    public Boolean getGrantAssignmentsAccess() {
+        return grantAssignmentsAccess;
+    }
+    
+    public void setGrantAssignmentsAccess(Boolean grantAssignmentsAccess) {
+        this.grantAssignmentsAccess = grantAssignmentsAccess;
+    }
+    
+    public Boolean getPaygroupAssignmentsAccess() {
+        return paygroupAssignmentsAccess;
+    }
+    
+    public void setPaygroupAssignmentsAccess(Boolean paygroupAssignmentsAccess) {
+        this.paygroupAssignmentsAccess = paygroupAssignmentsAccess;
+    }
 }
-
-

@@ -5,12 +5,17 @@ import { Layout } from './components/Layout'
 import { Login } from './pages/Login'
 import { ChangePassword } from './pages/ChangePassword'
 import { Dashboard } from './pages/Dashboard'
-import { Users } from './pages/Users'
+import { EmployeeDetails } from './pages/EmployeeDetails'
+import { UsersDetails } from './pages/UsersDetails'
 import { Configuration } from './pages/Configuration'
 import { OrganizationDetails } from './pages/OrganizationDetails'
 import { CompanyAssignments } from './pages/CompanyAssignments'
 import { AcademicUnitAssignments } from './pages/AcademicUnitAssignments'
 import { GiftAssignments } from './pages/GiftAssignments'
+import { LocationAssignments } from './pages/LocationAssignments'
+import { ProjectAssignments } from './pages/ProjectAssignments'
+import { GrantAssignments } from './pages/GrantAssignments'
+import { PaygroupAssignments } from './pages/PaygroupAssignments'
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth()
@@ -93,6 +98,78 @@ const GiftAssignmentsRoute = ({ children }) => {
   return hasGiftAssignmentsAccess() ? children : <Navigate to="/dashboard" />
 }
 
+const LocationAssignmentsRoute = ({ children }) => {
+  const { user, loading, isAdmin, hasLocationAssignmentsAccess } = useAuth()
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />
+  }
+
+  if (isAdmin()) {
+    return children
+  }
+
+  return hasLocationAssignmentsAccess() ? children : <Navigate to="/dashboard" />
+}
+
+const ProjectAssignmentsRoute = ({ children }) => {
+  const { user, loading, isAdmin, hasProjectAssignmentsAccess } = useAuth()
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />
+  }
+
+  if (isAdmin()) {
+    return children
+  }
+
+  return hasProjectAssignmentsAccess() ? children : <Navigate to="/dashboard" />
+}
+
+const GrantAssignmentsRoute = ({ children }) => {
+  const { user, loading, isAdmin, hasGrantAssignmentsAccess } = useAuth()
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />
+  }
+
+  if (isAdmin()) {
+    return children
+  }
+
+  return hasGrantAssignmentsAccess() ? children : <Navigate to="/dashboard" />
+}
+
+const PaygroupAssignmentsRoute = ({ children }) => {
+  const { user, loading, isAdmin, hasPaygroupAssignmentsAccess } = useAuth()
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />
+  }
+
+  if (isAdmin()) {
+    return children
+  }
+
+  return hasPaygroupAssignmentsAccess() ? children : <Navigate to="/dashboard" />
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -109,10 +186,18 @@ function AppRoutes() {
         <Route index element={<Navigate to="/dashboard" />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route
-          path="users"
+          path="employee-details"
           element={
             <AdminRoute>
-              <Users />
+              <EmployeeDetails />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="users-details"
+          element={
+            <AdminRoute>
+              <UsersDetails />
             </AdminRoute>
           }
         />
@@ -154,6 +239,38 @@ function AppRoutes() {
             <GiftAssignmentsRoute>
               <GiftAssignments />
             </GiftAssignmentsRoute>
+          }
+        />
+        <Route
+          path="location-assignments"
+          element={
+            <LocationAssignmentsRoute>
+              <LocationAssignments />
+            </LocationAssignmentsRoute>
+          }
+        />
+        <Route
+          path="project-assignments"
+          element={
+            <ProjectAssignmentsRoute>
+              <ProjectAssignments />
+            </ProjectAssignmentsRoute>
+          }
+        />
+        <Route
+          path="grant-assignments"
+          element={
+            <GrantAssignmentsRoute>
+              <GrantAssignments />
+            </GrantAssignmentsRoute>
+          }
+        />
+        <Route
+          path="paygroup-assignments"
+          element={
+            <PaygroupAssignmentsRoute>
+              <PaygroupAssignments />
+            </PaygroupAssignmentsRoute>
           }
         />
       </Route>

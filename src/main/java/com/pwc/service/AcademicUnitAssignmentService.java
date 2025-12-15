@@ -2,11 +2,13 @@ package com.pwc.service;
 
 import com.pwc.dto.*;
 import com.pwc.model.AcademicUnitAssignment;
+import com.pwc.model.Employee;
 import com.pwc.model.OrganizationDetail;
 import com.pwc.model.User;
 import com.pwc.repository.AcademicUnitAssignmentRepository;
+import com.pwc.repository.EmployeeRepository;
 import com.pwc.repository.OrganizationDetailRepository;
-import com.pwc.repository.UserRepository;
+import com.pwc.util.SecurityUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,16 +23,19 @@ import java.util.stream.Collectors;
 public class AcademicUnitAssignmentService {
     
     private final AcademicUnitAssignmentRepository academicUnitAssignmentRepository;
-    private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
     private final OrganizationDetailRepository organizationDetailRepository;
+    private final SecurityUtil securityUtil;
     
     public AcademicUnitAssignmentService(
             AcademicUnitAssignmentRepository academicUnitAssignmentRepository,
-            UserRepository userRepository,
-            OrganizationDetailRepository organizationDetailRepository) {
+            EmployeeRepository employeeRepository,
+            OrganizationDetailRepository organizationDetailRepository,
+            SecurityUtil securityUtil) {
         this.academicUnitAssignmentRepository = academicUnitAssignmentRepository;
-        this.userRepository = userRepository;
+        this.employeeRepository = employeeRepository;
         this.organizationDetailRepository = organizationDetailRepository;
+        this.securityUtil = securityUtil;
     }
     
     public PageResponse<AcademicUnitAssignmentDTO> getAllAcademicUnitAssignments(int page, int size, String sortBy, String sortDir, String search) {
@@ -61,9 +66,9 @@ public class AcademicUnitAssignmentService {
         );
     }
     
-    public PageResponse<AcademicUnitAssignmentDTO> getAcademicUnitAssignmentsByUser(Long userId, int page, int size) {
+    public PageResponse<AcademicUnitAssignmentDTO> getAcademicUnitAssignmentsByEmployee(Long employeeId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<AcademicUnitAssignment> assignmentPage = academicUnitAssignmentRepository.findByUserId(userId, pageable);
+        Page<AcademicUnitAssignment> assignmentPage = academicUnitAssignmentRepository.findByEmployeeId(employeeId, pageable);
         
         List<AcademicUnitAssignmentDTO> content = assignmentPage.getContent().stream()
                 .map(this::convertToDTO)
@@ -87,8 +92,8 @@ public class AcademicUnitAssignmentService {
     
     @Transactional
     public AcademicUnitAssignmentDTO createAcademicUnitAssignment(AcademicUnitAssignmentCreateDTO createDTO) {
-        User user = userRepository.findById(createDTO.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Employee employee = employeeRepository.findById(createDTO.getEmployeeId())
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
         
         OrganizationDetail organizationDetail = organizationDetailRepository.findById(createDTO.getOrganizationDetailId())
                 .orElseThrow(() -> new RuntimeException("Organization detail not found"));
@@ -99,13 +104,12 @@ public class AcademicUnitAssignmentService {
         }
         
         // Check for duplicate
-        if (academicUnitAssignmentRepository.existsByUserAndOrganizationDetail(user, organizationDetail)) {
-            throw new RuntimeException("Academic unit assignment already exists for this user and organization");
+        if (academicUnitAssignmentRepository.existsByEmployeeAndOrganizationDetail(employee, organizationDetail)) {
+            throw new RuntimeException("Academic unit assignment already exists for this employee and organization");
         }
         
-        AcademicUnitAssignment assignment = new AcademicUnitAssignment();
-        assignment.setUser(user);
-        assignment.setOrganizationDetail(organizationDetail);
+        User currentUser = securityUtil.getCurrentUser();
+        AcademicUnitAssignment assignment = new AcademicUnitAssignment(employee, organizationDetail, currentUser);
         assignment.setHcmAcademicChairAu(createDTO.getHcmAcademicChairAu());
         assignment.setHcmAcademicDeanAuh(createDTO.getHcmAcademicDeanAuh());
         assignment.setHcmAcademicFacultyExecutiveAuh(createDTO.getHcmAcademicFacultyExecutiveAuh());
@@ -167,12 +171,12 @@ public class AcademicUnitAssignmentService {
         AcademicUnitAssignmentDTO dto = new AcademicUnitAssignmentDTO();
         dto.setId(assignment.getId());
         
-        User user = assignment.getUser();
-        dto.setUserId(user.getId());
-        dto.setUserFirstName(user.getFirstName());
-        dto.setUserLastName(user.getLastName());
-        dto.setUserEmail(user.getEmail());
-        dto.setUserEmployeeId(user.getEmployeeId());
+        Employee employee = assignment.getEmployee();
+        dto.setEmployeeId(employee.getId());
+        dto.setEmployeeFirstName(employee.getFirstName());
+        dto.setEmployeeLastName(employee.getLastName());
+        dto.setEmployeeEmail(employee.getEmail());
+        dto.setEmployeeEmployeeId(employee.getEmployeeId());
         
         OrganizationDetail orgDetail = assignment.getOrganizationDetail();
         dto.setOrganizationDetailId(orgDetail.getId());
@@ -190,6 +194,9 @@ public class AcademicUnitAssignmentService {
         return dto;
     }
 }
+
+
+
 
 
 

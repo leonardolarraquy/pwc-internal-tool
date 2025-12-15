@@ -17,22 +17,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "employee_id", nullable = false)
-    private String employeeId;
-    
     @Column(name = "first_name", nullable = false)
     private String firstName;
     
     @Column(name = "last_name", nullable = false)
     private String lastName;
     
-    @Column(name = "position_id")
-    private String positionId;
+    @Column(name = "company")
+    private String company;
     
-    @Column(name = "position_title")
-    private String positionTitle;
-    
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
     
     @Column(name = "password", nullable = true)
@@ -51,22 +45,36 @@ public class User {
     @Column(name = "gift_assignments_access", nullable = true)
     private Boolean giftAssignmentsAccess;
     
+    @Column(name = "location_assignments_access", nullable = true)
+    private Boolean locationAssignmentsAccess;
+    
+    @Column(name = "project_assignments_access", nullable = true)
+    private Boolean projectAssignmentsAccess;
+    
+    @Column(name = "grant_assignments_access", nullable = true)
+    private Boolean grantAssignmentsAccess;
+    
+    @Column(name = "paygroup_assignments_access", nullable = true)
+    private Boolean paygroupAssignmentsAccess;
+    
     public User() {
     }
     
-    public User(Long id, String employeeId, String firstName, String lastName, String positionId, String positionTitle, String email, String password, Role role) {
+    public User(Long id, String firstName, String lastName, String company, String email, String password, Role role) {
         this.id = id;
-        this.employeeId = employeeId;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.positionId = positionId;
-        this.positionTitle = positionTitle;
+        this.company = company;
         this.email = email;
         this.password = password;
         this.role = role;
         this.companyAssignmentsAccess = null;
         this.academicUnitAssignmentsAccess = null;
         this.giftAssignmentsAccess = null;
+        this.locationAssignmentsAccess = null;
+        this.projectAssignmentsAccess = null;
+        this.grantAssignmentsAccess = null;
+        this.paygroupAssignmentsAccess = null;
     }
     
     // Getters and Setters
@@ -76,14 +84,6 @@ public class User {
     
     public void setId(Long id) {
         this.id = id;
-    }
-    
-    public String getEmployeeId() {
-        return employeeId;
-    }
-    
-    public void setEmployeeId(String employeeId) {
-        this.employeeId = employeeId;
     }
     
     public String getFirstName() {
@@ -102,20 +102,12 @@ public class User {
         this.lastName = lastName;
     }
     
-    public String getPositionId() {
-        return positionId;
+    public String getCompany() {
+        return company;
     }
     
-    public void setPositionId(String positionId) {
-        this.positionId = positionId;
-    }
-    
-    public String getPositionTitle() {
-        return positionTitle;
-    }
-    
-    public void setPositionTitle(String positionTitle) {
-        this.positionTitle = positionTitle;
+    public void setCompany(String company) {
+        this.company = company;
     }
     
     public String getEmail() {
@@ -165,5 +157,36 @@ public class User {
     public void setGiftAssignmentsAccess(Boolean giftAssignmentsAccess) {
         this.giftAssignmentsAccess = giftAssignmentsAccess;
     }
+    
+    public Boolean getLocationAssignmentsAccess() {
+        return locationAssignmentsAccess != null ? locationAssignmentsAccess : false;
+    }
+    
+    public void setLocationAssignmentsAccess(Boolean locationAssignmentsAccess) {
+        this.locationAssignmentsAccess = locationAssignmentsAccess;
+    }
+    
+    public Boolean getProjectAssignmentsAccess() {
+        return projectAssignmentsAccess != null ? projectAssignmentsAccess : false;
+    }
+    
+    public void setProjectAssignmentsAccess(Boolean projectAssignmentsAccess) {
+        this.projectAssignmentsAccess = projectAssignmentsAccess;
+    }
+    
+    public Boolean getGrantAssignmentsAccess() {
+        return grantAssignmentsAccess != null ? grantAssignmentsAccess : false;
+    }
+    
+    public void setGrantAssignmentsAccess(Boolean grantAssignmentsAccess) {
+        this.grantAssignmentsAccess = grantAssignmentsAccess;
+    }
+    
+    public Boolean getPaygroupAssignmentsAccess() {
+        return paygroupAssignmentsAccess != null ? paygroupAssignmentsAccess : false;
+    }
+    
+    public void setPaygroupAssignmentsAccess(Boolean paygroupAssignmentsAccess) {
+        this.paygroupAssignmentsAccess = paygroupAssignmentsAccess;
+    }
 }
-

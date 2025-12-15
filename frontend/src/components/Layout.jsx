@@ -13,12 +13,16 @@ import {
   Building2,
   GraduationCap,
   Gift,
-  Building
+  Building,
+  MapPin,
+  FolderKanban,
+  Award,
+  UsersRound
 } from 'lucide-react'
 import { useState } from 'react'
 
 export const Layout = () => {
-  const { user, logout, isAdmin, hasCompanyAssignmentsAccess, hasAcademicUnitAssignmentsAccess, hasGiftAssignmentsAccess } = useAuth()
+  const { user, logout, isAdmin, hasCompanyAssignmentsAccess, hasAcademicUnitAssignmentsAccess, hasGiftAssignmentsAccess, hasLocationAssignmentsAccess, hasProjectAssignmentsAccess, hasGrantAssignmentsAccess, hasPaygroupAssignmentsAccess } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -33,13 +37,19 @@ export const Layout = () => {
   ]
 
   if (isAdmin()) {
-    menuItems.push({ path: '/users', label: 'User Configuration', icon: Users })
+    menuItems.push({ path: '/users-details', label: 'Users Details', icon: UsersRound })
     menuItems.push({ path: '/organization-details', label: 'Organization Details', icon: Building })
-    menuItems.push({ path: '/configuration', label: 'Configuration', icon: Settings })
+    menuItems.push({ path: '/employee-details', label: 'Employee Details', icon: Users })
     // Admins always see all assignment pages
     menuItems.push({ path: '/company-assignments', label: 'Company Assignments', icon: Building2 })
     menuItems.push({ path: '/academic-unit-assignments', label: 'Academic Unit Assignments', icon: GraduationCap })
     menuItems.push({ path: '/gift-assignments', label: 'Gift Assignments', icon: Gift })
+    menuItems.push({ path: '/location-assignments', label: 'Location Assignments', icon: MapPin, disabled: true })
+    menuItems.push({ path: '/project-assignments', label: 'Project Assignments', icon: FolderKanban, disabled: true })
+    menuItems.push({ path: '/grant-assignments', label: 'Grant Assignments', icon: Award, disabled: true })
+    menuItems.push({ path: '/paygroup-assignments', label: 'Paygroup Assignments', icon: UsersRound, disabled: true })
+    // Configuration at the end, disabled for now
+    menuItems.push({ path: '/configuration', label: 'Configuration', icon: Settings, disabled: true })
   } else {
     // Regular users only see pages they have access to
     if (hasCompanyAssignmentsAccess()) {
@@ -52,6 +62,22 @@ export const Layout = () => {
 
     if (hasGiftAssignmentsAccess()) {
       menuItems.push({ path: '/gift-assignments', label: 'Gift Assignments', icon: Gift })
+    }
+
+    if (hasLocationAssignmentsAccess()) {
+      menuItems.push({ path: '/location-assignments', label: 'Location Assignments', icon: MapPin })
+    }
+
+    if (hasProjectAssignmentsAccess()) {
+      menuItems.push({ path: '/project-assignments', label: 'Project Assignments', icon: FolderKanban })
+    }
+
+    if (hasGrantAssignmentsAccess()) {
+      menuItems.push({ path: '/grant-assignments', label: 'Grant Assignments', icon: Award })
+    }
+
+    if (hasPaygroupAssignmentsAccess()) {
+      menuItems.push({ path: '/paygroup-assignments', label: 'Paygroup Assignments', icon: UsersRound })
     }
   }
 
@@ -93,6 +119,20 @@ export const Layout = () => {
             {menuItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
+              const isDisabled = item.disabled === true
+              
+              if (isDisabled) {
+                return (
+                  <div
+                    key={item.path}
+                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground opacity-50 cursor-not-allowed"
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </div>
+                )
+              }
+              
               return (
                 <Link
                   key={item.path}

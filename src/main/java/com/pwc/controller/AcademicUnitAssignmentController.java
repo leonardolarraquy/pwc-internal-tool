@@ -37,14 +37,14 @@ public class AcademicUnitAssignmentController {
         return ResponseEntity.ok(assignment);
     }
     
-    @GetMapping("/user/{userId}")
+    @GetMapping("/employee/{employeeId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PageResponse<AcademicUnitAssignmentDTO>> getAcademicUnitAssignmentsByUser(
-            @PathVariable Long userId,
+    public ResponseEntity<PageResponse<AcademicUnitAssignmentDTO>> getAcademicUnitAssignmentsByEmployee(
+            @PathVariable Long employeeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size) {
         
-        PageResponse<AcademicUnitAssignmentDTO> response = academicUnitAssignmentService.getAcademicUnitAssignmentsByUser(userId, page, size);
+        PageResponse<AcademicUnitAssignmentDTO> response = academicUnitAssignmentService.getAcademicUnitAssignmentsByEmployee(employeeId, page, size);
         return ResponseEntity.ok(response);
     }
     

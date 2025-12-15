@@ -1,15 +1,18 @@
 package com.pwc.controller;
 
 import com.pwc.dto.*;
+import com.pwc.model.User;
+import com.pwc.repository.AcademicUnitAssignmentRepository;
+import com.pwc.repository.CompanyAssignmentRepository;
+import com.pwc.repository.GiftAssignmentRepository;
 import com.pwc.service.UserService;
+import com.pwc.util.SecurityUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,9 +20,22 @@ import java.util.Map;
 public class UserController {
     
     private final UserService userService;
+    private final CompanyAssignmentRepository companyAssignmentRepository;
+    private final AcademicUnitAssignmentRepository academicUnitAssignmentRepository;
+    private final GiftAssignmentRepository giftAssignmentRepository;
+    private final SecurityUtil securityUtil;
     
-    public UserController(UserService userService) {
+    public UserController(
+            UserService userService,
+            CompanyAssignmentRepository companyAssignmentRepository,
+            AcademicUnitAssignmentRepository academicUnitAssignmentRepository,
+            GiftAssignmentRepository giftAssignmentRepository,
+            SecurityUtil securityUtil) {
         this.userService = userService;
+        this.companyAssignmentRepository = companyAssignmentRepository;
+        this.academicUnitAssignmentRepository = academicUnitAssignmentRepository;
+        this.giftAssignmentRepository = giftAssignmentRepository;
+        this.securityUtil = securityUtil;
     }
     
     @GetMapping
@@ -39,6 +55,18 @@ public class UserController {
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Long>> getUserStatistics() {
         Map<String, Long> stats = userService.getUserStatistics();
+        return ResponseEntity.ok(stats);
+    }
+    
+    @GetMapping("/my-assignment-stats")
+    public ResponseEntity<Map<String, Long>> getMyAssignmentStats() {
+        User currentUser = securityUtil.getCurrentUser();
+        
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("companyAssignments", companyAssignmentRepository.countByCreatedById(currentUser.getId()));
+        stats.put("academicUnitAssignments", academicUnitAssignmentRepository.countByCreatedById(currentUser.getId()));
+        stats.put("giftAssignments", giftAssignmentRepository.countByCreatedById(currentUser.getId()));
+        
         return ResponseEntity.ok(stats);
     }
     
@@ -71,16 +99,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
     
-    @PostMapping("/import")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> importUsers(@RequestParam("file") MultipartFile file) {
-        int importedCount = userService.importUsersFromCsv(file);
-        Map<String, Object> response = new HashMap<>();
-        response.put("imported", importedCount);
-        response.put("message", "Successfully imported " + importedCount + " users");
-        return ResponseEntity.ok(response);
-    }
-    
     @PostMapping("/{id}/reset-password")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> resetPassword(@PathVariable Long id) {
@@ -89,12 +107,4 @@ public class UserController {
         response.put("message", "Password reset successfully. User must set a new password on next login.");
         return ResponseEntity.ok(response);
     }
-    
-    @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserDTO>> searchUser(@RequestParam String query) {
-        List<UserDTO> users = userService.searchUser(query);
-        return ResponseEntity.ok(users);
-    }
 }
-

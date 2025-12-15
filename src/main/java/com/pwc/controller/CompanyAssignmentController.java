@@ -37,14 +37,14 @@ public class CompanyAssignmentController {
         return ResponseEntity.ok(assignment);
     }
     
-    @GetMapping("/user/{userId}")
+    @GetMapping("/employee/{employeeId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PageResponse<CompanyAssignmentDTO>> getCompanyAssignmentsByUser(
-            @PathVariable Long userId,
+    public ResponseEntity<PageResponse<CompanyAssignmentDTO>> getCompanyAssignmentsByEmployee(
+            @PathVariable Long employeeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size) {
         
-        PageResponse<CompanyAssignmentDTO> response = companyAssignmentService.getCompanyAssignmentsByUser(userId, page, size);
+        PageResponse<CompanyAssignmentDTO> response = companyAssignmentService.getCompanyAssignmentsByEmployee(employeeId, page, size);
         return ResponseEntity.ok(response);
     }
     

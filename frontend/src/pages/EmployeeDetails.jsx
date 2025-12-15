@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { userAPI } from '../services/api'
+import { employeeAPI } from '../services/api'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -26,11 +26,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select'
-import { Plus, Edit, Trash2, Upload, ChevronLeft, ChevronRight, ArrowUpDown, KeyRound } from 'lucide-react'
-import { Checkbox } from '../components/ui/checkbox'
+import { Plus, Edit, Trash2, Upload, ChevronLeft, ChevronRight, ArrowUpDown, FileSpreadsheet } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
-export const Users = () => {
-  const [users, setUsers] = useState([])
+export const EmployeeDetails = () => {
+  const [employees, setEmployees] = useState([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(100)
@@ -40,16 +40,11 @@ export const Users = () => {
   const [sortDir, setSortDir] = useState('asc')
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
-  const [accessFilter, setAccessFilter] = useState('all') // 'all', 'company', 'academic', 'gift', 'none'
-  const [filterCompany, setFilterCompany] = useState(null) // null = all, true = with access, false = without
-  const [filterAcademicUnit, setFilterAcademicUnit] = useState(null)
-  const [filterGift, setFilterGift] = useState(null)
   
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState(null)
+  const [editingEmployee, setEditingEmployee] = useState(null)
   const [selectedFile, setSelectedFile] = useState(null)
   const [importing, setImporting] = useState(false)
   
@@ -60,27 +55,22 @@ export const Users = () => {
     positionId: '',
     positionTitle: '',
     email: '',
-    password: '',
-    role: 'USER',
-    companyAssignmentsAccess: false,
-    academicUnitAssignmentsAccess: false,
-    giftAssignmentsAccess: false,
   })
 
   useEffect(() => {
-    loadUsers()
-  }, [page, size, sortBy, sortDir, search, accessFilter])
+    loadEmployees()
+  }, [page, size, sortBy, sortDir, search])
 
-  const loadUsers = async () => {
+  const loadEmployees = async () => {
     setLoading(true)
     try {
-      const response = await userAPI.getAll(page, size, sortBy, sortDir, search, accessFilter)
+      const response = await employeeAPI.getAll(page, size, sortBy, sortDir, search)
       const data = response.data
-      setUsers(data.content)
+      setEmployees(data.content)
       setTotalPages(data.totalPages)
       setTotalElements(data.totalElements)
     } catch (error) {
-      console.error('Error loading users:', error)
+      console.error('Error loading employees:', error)
     } finally {
       setLoading(false)
     }
@@ -102,7 +92,7 @@ export const Users = () => {
   }
 
   const handleCreate = () => {
-    setEditingUser(null)
+    setEditingEmployee(null)
     setFormData({
       employeeId: '',
       firstName: '',
@@ -110,67 +100,45 @@ export const Users = () => {
       positionId: '',
       positionTitle: '',
       email: '',
-      password: '',
-      role: 'USER',
-      companyAssignmentsAccess: false,
-      academicUnitAssignmentsAccess: false,
-      giftAssignmentsAccess: false,
     })
     setDialogOpen(true)
   }
 
-  const handleEdit = (user) => {
-    setEditingUser(user)
+  const handleEdit = (employee) => {
+    setEditingEmployee(employee)
     setFormData({
-      employeeId: user.employeeId,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      positionId: user.positionId || '',
-      positionTitle: user.positionTitle || '',
-      email: user.email,
-      password: '',
-      role: user.role,
-      companyAssignmentsAccess: user.companyAssignmentsAccess || false,
-      academicUnitAssignmentsAccess: user.academicUnitAssignmentsAccess || false,
-      giftAssignmentsAccess: user.giftAssignmentsAccess || false,
+      employeeId: employee.employeeId,
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      positionId: employee.positionId || '',
+      positionTitle: employee.positionTitle || '',
+      email: employee.email,
     })
     setDialogOpen(true)
   }
 
   const handleSave = async () => {
     try {
-      if (editingUser) {
-        await userAPI.update(editingUser.id, formData)
+      if (editingEmployee) {
+        await employeeAPI.update(editingEmployee.id, formData)
       } else {
-        await userAPI.create(formData)
+        await employeeAPI.create(formData)
       }
       setDialogOpen(false)
-      loadUsers()
+      loadEmployees()
     } catch (error) {
-      alert(error.response?.data?.message || 'Error saving user')
+      alert(error.response?.data?.message || 'Error saving employee')
     }
   }
 
   const handleDelete = async () => {
     try {
-      await userAPI.delete(editingUser.id)
+      await employeeAPI.delete(editingEmployee.id)
       setDeleteDialogOpen(false)
-      setEditingUser(null)
-      loadUsers()
+      setEditingEmployee(null)
+      loadEmployees()
     } catch (error) {
-      alert(error.response?.data?.message || 'Error deleting user')
-    }
-  }
-
-  const handleResetPassword = async () => {
-    try {
-      await userAPI.resetPassword(editingUser.id)
-      alert('Password reset successfully. User must set a new password on next login.')
-      setResetPasswordDialogOpen(false)
-      setEditingUser(null)
-      loadUsers()
-    } catch (error) {
-      alert(error.response?.data?.message || 'Error resetting password')
+      alert(error.response?.data?.message || 'Error deleting employee')
     }
   }
 
@@ -186,15 +154,49 @@ export const Users = () => {
 
     setImporting(true)
     try {
-      const response = await userAPI.importCSV(selectedFile)
-      alert(`Successfully imported ${response.data.imported} users`)
+      const response = await employeeAPI.importCSV(selectedFile)
+      alert(`Successfully imported ${response.data.imported} employees`)
       setImportDialogOpen(false)
       setSelectedFile(null)
-      loadUsers()
+      loadEmployees()
     } catch (error) {
       alert(error.response?.data?.message || 'Error importing CSV')
     } finally {
       setImporting(false)
+    }
+  }
+
+  const handleExportExcel = async () => {
+    try {
+      setLoading(true)
+      // Get all employees without pagination
+      const response = await employeeAPI.getAll(0, 10000, 'id', 'asc', '')
+      const allEmployees = response.data.content
+      
+      // Prepare data for Excel
+      const excelData = allEmployees.map(emp => ({
+        'ID': emp.id,
+        'Employee ID': emp.employeeId,
+        'First Name': emp.firstName || '',
+        'Last Name': emp.lastName || '',
+        'Email': emp.email || '',
+        'Position ID': emp.positionId || '',
+        'Position Title': emp.positionTitle || ''
+      }))
+      
+      // Create workbook and worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Employees')
+      
+      // Generate file and download
+      const fileName = `employees_${new Date().toISOString().split('T')[0]}.xlsx`
+      XLSX.writeFile(wb, fileName)
+    } catch (error) {
+      console.error('Error exporting to Excel:', error)
+      alert('Error exporting to Excel: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -211,17 +213,21 @@ export const Users = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">User Configuration</h1>
+          <h1 className="text-3xl font-bold">Employee Details</h1>
           <p className="text-muted-foreground">Manage employees and their information</p>
         </div>
         <div className="flex gap-2">
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Employee
+          </Button>
           <Button onClick={() => setImportDialogOpen(true)} variant="outline">
             <Upload className="mr-2 h-4 w-4" />
             Import CSV
           </Button>
-          <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add User
+          <Button onClick={handleExportExcel} variant="outline">
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Export Excel
           </Button>
         </div>
       </div>
@@ -237,18 +243,6 @@ export const Users = () => {
           />
           <Button onClick={handleSearch}>Search</Button>
         </div>
-        <Select value={accessFilter} onValueChange={(val) => { setAccessFilter(val); setPage(0) }}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by access" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Access Types</SelectItem>
-            <SelectItem value="company">Company Access</SelectItem>
-            <SelectItem value="academic">Academic Unit Access</SelectItem>
-            <SelectItem value="gift">Gift Access</SelectItem>
-            <SelectItem value="none">No Access</SelectItem>
-          </SelectContent>
-        </Select>
         <Select value={size.toString()} onValueChange={(val) => { setSize(parseInt(val)); setPage(0) }}>
           <SelectTrigger className="w-32">
             <SelectValue />
@@ -261,7 +255,7 @@ export const Users = () => {
         </Select>
       </div>
 
-      {/* Users Table */}
+      {/* Employees Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -271,9 +265,7 @@ export const Users = () => {
               <SortableHeader column="firstName">First Name</SortableHeader>
               <SortableHeader column="lastName">Last Name</SortableHeader>
               <SortableHeader column="email">Email</SortableHeader>
-              <SortableHeader column="positionTitle">Position</SortableHeader>
-              <SortableHeader column="role">Role</SortableHeader>
-              <SortableHeader column="companyAssignmentsAccess">Access Permissions</SortableHeader>
+              <SortableHeader column="positionTitle">Position Title</SortableHeader>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -284,53 +276,28 @@ export const Users = () => {
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : users.length === 0 ? (
+            ) : employees.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8">
-                  No users found
+                <TableCell colSpan={7} className="text-center py-8">
+                  No employees found
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.employeeId}</TableCell>
-                  <TableCell>{user.firstName}</TableCell>
-                  <TableCell>{user.lastName}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.positionTitle || '-'}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      user.role === 'ADMIN' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {user.companyAssignmentsAccess && (
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Company</span>
-                      )}
-                      {user.academicUnitAssignmentsAccess && (
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Academic Unit</span>
-                      )}
-                      {user.giftAssignmentsAccess && (
-                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Gift</span>
-                      )}
-                      {!user.companyAssignmentsAccess && !user.academicUnitAssignmentsAccess && !user.giftAssignmentsAccess && (
-                        <span className="text-xs text-muted-foreground">None</span>
-                      )}
-                    </div>
-                  </TableCell>
+              employees.map((employee) => (
+                <TableRow key={employee.id}>
+                  <TableCell>{employee.id}</TableCell>
+                  <TableCell>{employee.employeeId}</TableCell>
+                  <TableCell>{employee.firstName}</TableCell>
+                  <TableCell>{employee.lastName}</TableCell>
+                  <TableCell>{employee.email}</TableCell>
+                  <TableCell>{employee.positionTitle || '-'}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleEdit(user)}
-                        title="Edit user"
+                        onClick={() => handleEdit(employee)}
+                        title="Edit employee"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -338,21 +305,10 @@ export const Users = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          setEditingUser(user)
-                          setResetPasswordDialogOpen(true)
-                        }}
-                        title="Reset password"
-                      >
-                        <KeyRound className="h-4 w-4 text-orange-600" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditingUser(user)
+                          setEditingEmployee(employee)
                           setDeleteDialogOpen(true)
                         }}
-                        title="Delete user"
+                        title="Delete employee"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -368,7 +324,7 @@ export const Users = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          Showing {page * size + 1} to {Math.min((page + 1) * size, totalElements)} of {totalElements} users
+          Showing {page * size + 1} to {Math.min((page + 1) * size, totalElements)} of {totalElements} employees
         </div>
         <div className="flex gap-2">
           <Button
@@ -418,9 +374,9 @@ export const Users = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingUser ? 'Edit User' : 'Create User'}</DialogTitle>
+            <DialogTitle>{editingEmployee ? 'Edit Employee' : 'Create Employee'}</DialogTitle>
             <DialogDescription>
-              {editingUser ? 'Update user information' : 'Add a new user to the system'}
+              {editingEmployee ? 'Update employee information' : 'Add a new employee to the system'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -483,84 +439,6 @@ export const Users = () => {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">
-                  Password {editingUser ? '(leave blank to keep current)' : '*'}
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required={!editingUser}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select value={formData.role} onValueChange={(val) => setFormData({ ...formData, role: val })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USER">USER</SelectItem>
-                    <SelectItem value="ADMIN">ADMIN</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-4 border-t pt-4">
-              <h4 className="font-semibold">Access Permissions</h4>
-              <div className="space-y-3">
-                <div className="flex items-start space-x-2">
-                  <Checkbox
-                    id="companyAssignmentsAccess"
-                    checked={formData.companyAssignmentsAccess || false}
-                    onChange={(e) => setFormData({ ...formData, companyAssignmentsAccess: e.target.checked })}
-                  />
-                  <div className="space-y-1 leading-none">
-                    <Label htmlFor="companyAssignmentsAccess" className="font-medium cursor-pointer">
-                      Company Assignments Access
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Grant access to view and manage company assignments.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-2">
-                  <Checkbox
-                    id="academicUnitAssignmentsAccess"
-                    checked={formData.academicUnitAssignmentsAccess || false}
-                    onChange={(e) => setFormData({ ...formData, academicUnitAssignmentsAccess: e.target.checked })}
-                  />
-                  <div className="space-y-1 leading-none">
-                    <Label htmlFor="academicUnitAssignmentsAccess" className="font-medium cursor-pointer">
-                      Academic Unit Assignments Access
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Grant access to view and manage academic unit assignments.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-2">
-                  <Checkbox
-                    id="giftAssignmentsAccess"
-                    checked={formData.giftAssignmentsAccess || false}
-                    onChange={(e) => setFormData({ ...formData, giftAssignmentsAccess: e.target.checked })}
-                  />
-                  <div className="space-y-1 leading-none">
-                    <Label htmlFor="giftAssignmentsAccess" className="font-medium cursor-pointer">
-                      Gift Assignments Access
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Grant access to view and manage gift assignments.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
@@ -571,34 +449,13 @@ export const Users = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Reset Password Confirmation Dialog */}
-      <Dialog open={resetPasswordDialogOpen} onOpenChange={setResetPasswordDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to reset the password for {editingUser?.firstName} {editingUser?.lastName}? 
-              The user will be required to set a new password on their next login.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setResetPasswordDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="default" onClick={handleResetPassword}>
-              Reset Password
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle>Delete Employee</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete {editingUser?.firstName} {editingUser?.lastName}? This action cannot be undone.
+              Are you sure you want to delete {editingEmployee?.firstName} {editingEmployee?.lastName}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

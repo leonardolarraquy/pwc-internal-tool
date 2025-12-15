@@ -2,11 +2,11 @@ package com.pwc.dto;
 
 public class GiftAssignmentDTO {
     private Long id;
-    private Long userId;
-    private String userFirstName;
-    private String userLastName;
-    private String userEmail;
-    private String userEmployeeId;
+    private Long employeeId;
+    private String employeeFirstName;
+    private String employeeLastName;
+    private String employeeEmail;
+    private String employeeEmployeeId;
     private Long organizationDetailId;
     private String organizationName;
     private String organizationType;
@@ -27,44 +27,44 @@ public class GiftAssignmentDTO {
         this.id = id;
     }
     
-    public Long getUserId() {
-        return userId;
+    public Long getEmployeeId() {
+        return employeeId;
     }
     
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
     }
     
-    public String getUserFirstName() {
-        return userFirstName;
+    public String getEmployeeFirstName() {
+        return employeeFirstName;
     }
     
-    public void setUserFirstName(String userFirstName) {
-        this.userFirstName = userFirstName;
+    public void setEmployeeFirstName(String employeeFirstName) {
+        this.employeeFirstName = employeeFirstName;
     }
     
-    public String getUserLastName() {
-        return userLastName;
+    public String getEmployeeLastName() {
+        return employeeLastName;
     }
     
-    public void setUserLastName(String userLastName) {
-        this.userLastName = userLastName;
+    public void setEmployeeLastName(String employeeLastName) {
+        this.employeeLastName = employeeLastName;
     }
     
-    public String getUserEmail() {
-        return userEmail;
+    public String getEmployeeEmail() {
+        return employeeEmail;
     }
     
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
+    public void setEmployeeEmail(String employeeEmail) {
+        this.employeeEmail = employeeEmail;
     }
     
-    public String getUserEmployeeId() {
-        return userEmployeeId;
+    public String getEmployeeEmployeeId() {
+        return employeeEmployeeId;
     }
     
-    public void setUserEmployeeId(String userEmployeeId) {
-        this.userEmployeeId = userEmployeeId;
+    public void setEmployeeEmployeeId(String employeeEmployeeId) {
+        this.employeeEmployeeId = employeeEmployeeId;
     }
     
     public Long getOrganizationDetailId() {
@@ -123,6 +123,9 @@ public class GiftAssignmentDTO {
         this.finProfessorshipPartnerGift = finProfessorshipPartnerGift;
     }
 }
+
+
+
 
 
 

@@ -4,8 +4,8 @@ import jakarta.validation.constraints.NotNull;
 
 public class AcademicUnitAssignmentCreateDTO {
     
-    @NotNull(message = "User ID is required")
-    private Long userId;
+    @NotNull(message = "Employee ID is required")
+    private Long employeeId;
     
     @NotNull(message = "Organization Detail ID is required")
     private Long organizationDetailId;
@@ -20,12 +20,12 @@ public class AcademicUnitAssignmentCreateDTO {
     public AcademicUnitAssignmentCreateDTO() {
     }
     
-    public Long getUserId() {
-        return userId;
+    public Long getEmployeeId() {
+        return employeeId;
     }
     
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
     }
     
     public Long getOrganizationDetailId() {
@@ -84,6 +84,9 @@ public class AcademicUnitAssignmentCreateDTO {
         this.hcmAcademicSchoolDirectorAuh = hcmAcademicSchoolDirectorAuh;
     }
 }
+
+
+
 
 
 

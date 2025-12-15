@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { companyAssignmentAPI, organizationDetailAPI, employeeAPI } from '../services/api'
+import { projectAssignmentAPI, organizationDetailAPI, employeeAPI } from '../services/api'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Checkbox } from '../components/ui/checkbox'
 import {
   Table,
   TableBody,
@@ -27,14 +26,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select'
-import { Edit, Trash2, ChevronLeft, ChevronRight, ArrowUpDown, AlertCircle, CheckCircle2, Save, Plus, Users, FileSpreadsheet } from 'lucide-react'
-import * as XLSX from 'xlsx'
+import { Trash2, ChevronLeft, ChevronRight, ArrowUpDown, AlertCircle, CheckCircle2, Save, Plus, Users } from 'lucide-react'
 
-export const CompanyAssignments = () => {
-  // Mode: 'assign' or 'show'
-  const [mode, setMode] = useState('show') // 'assign' or 'show'
-  
-  // For "Show assigned employees" mode
+export const ProjectAssignments = () => {
+  const [mode, setMode] = useState('show')
   const [assignments, setAssignments] = useState([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(0)
@@ -45,13 +40,8 @@ export const CompanyAssignments = () => {
   const [sortDir, setSortDir] = useState('asc')
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
-  
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedAssignment, setSelectedAssignment] = useState(null)
-  const [formData, setFormData] = useState({})
-
-  // For "Assign new employees" mode
   const [allOrganizationDetails, setAllOrganizationDetails] = useState([])
   const [filteredOrganizationDetails, setFilteredOrganizationDetails] = useState([])
   const [organizationSearchInput, setOrganizationSearchInput] = useState('')
@@ -67,11 +57,10 @@ export const CompanyAssignments = () => {
     if (mode === 'show') {
       loadAssignments()
     } else if (mode === 'assign') {
-      loadCompanyOrganizationDetails()
+      loadProjectOrganizationDetails()
     }
   }, [mode, page, size, sortBy, sortDir, search])
 
-  // Filter organization details locally when search input changes
   useEffect(() => {
     if (mode === 'assign') {
       if (!organizationSearchInput.trim()) {
@@ -83,11 +72,7 @@ export const CompanyAssignments = () => {
           const orgName = (org.organization || '').toLowerCase()
           const refId = (org.referenceId || '').toLowerCase()
           const id = (org.id || '').toString()
-          
-          return legacyName.includes(searchLower) ||
-                 orgName.includes(searchLower) ||
-                 refId.includes(searchLower) ||
-                 id.includes(searchLower)
+          return legacyName.includes(searchLower) || orgName.includes(searchLower) || refId.includes(searchLower) || id.includes(searchLower)
         })
         setFilteredOrganizationDetails(filtered)
       }
@@ -97,28 +82,26 @@ export const CompanyAssignments = () => {
   const loadAssignments = async () => {
     setLoading(true)
     try {
-      const response = await companyAssignmentAPI.getAll(page, size, sortBy, sortDir, search)
+      const response = await projectAssignmentAPI.getAll(page, size, sortBy, sortDir, search)
       const data = response.data
       setAssignments(data.content)
       setTotalPages(data.totalPages)
       setTotalElements(data.totalElements)
     } catch (error) {
-      console.error('Error loading gift assignments:', error)
-      alert(error.response?.data?.message || 'Error loading gift assignments')
+      console.error('Error loading project assignments:', error)
+      alert(error.response?.data?.message || 'Error loading project assignments')
     } finally {
       setLoading(false)
     }
   }
 
-  const loadCompanyOrganizationDetails = async () => {
+  const loadProjectOrganizationDetails = async () => {
     setLoading(true)
     try {
-      // Load all organization details of type "Company"
-      const response = await organizationDetailAPI.getAll(0, 10000, 'id', 'asc', '', 'Company')
+      const response = await organizationDetailAPI.getAll(0, 10000, 'id', 'asc', '', 'Project')
       const allOrgs = response.data.content || []
       setAllOrganizationDetails(allOrgs)
       setFilteredOrganizationDetails(allOrgs)
-      // Initialize assignment data for each organization
       const initialData = {}
       allOrgs.forEach(org => {
         initialData[org.id] = {
@@ -133,7 +116,7 @@ export const CompanyAssignments = () => {
       setAssignmentData(initialData)
       assignmentDataRef.current = initialData
     } catch (error) {
-      console.error('Error loading company organization details:', error)
+      console.error('Error loading project organization details:', error)
       alert('Error loading organization details. Please try again.')
     } finally {
       setLoading(false)
@@ -143,58 +126,6 @@ export const CompanyAssignments = () => {
   const handleSearch = () => {
     setSearch(searchInput)
     setPage(0)
-  }
-
-  const handleExportExcel = async () => {
-    try {
-      setLoading(true)
-      // Get all assignments without pagination
-      const response = await companyAssignmentAPI.getAll(0, 10000, 'id', 'asc', '')
-      const allAssignments = response.data.content
-      
-      // Prepare data for Excel with title
-      const excelData = [
-        ['Company Assignments'],
-        [''], // Empty row
-        ['ID', 'First Name', 'Last Name', 'Email', 'Organization'],
-        ...allAssignments.map(assignment => [
-          assignment.id,
-          assignment.employeeFirstName || '',
-          assignment.employeeLastName || '',
-          assignment.employeeEmail || '',
-          assignment.organizationName || ''
-        ])
-      ]
-      
-      // Create workbook and worksheet
-      const ws = XLSX.utils.aoa_to_sheet(excelData)
-      const wb = XLSX.utils.book_new()
-      
-      // Set column widths
-      ws['!cols'] = [
-        { wch: 10 }, // ID
-        { wch: 20 }, // First Name
-        { wch: 20 }, // Last Name
-        { wch: 30 }, // Email
-        { wch: 40 }  // Organization
-      ]
-      
-      // Merge title cells
-      ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }
-      ]
-      
-      XLSX.utils.book_append_sheet(wb, ws, 'Company Assignments')
-      
-      // Generate file and download
-      const fileName = `company_assignments_${new Date().toISOString().split('T')[0]}.xlsx`
-      XLSX.writeFile(wb, fileName)
-    } catch (error) {
-      console.error('Error exporting to Excel:', error)
-      alert('Error exporting to Excel: ' + (error.response?.data?.message || error.message))
-    } finally {
-      setLoading(false)
-    }
   }
 
   const handleSort = (column) => {
@@ -207,27 +138,9 @@ export const CompanyAssignments = () => {
     setPage(0)
   }
 
-  const handleEdit = (assignment) => {
-    setSelectedAssignment(assignment)
-    // Company assignments don't have boolean fields
-    setFormData({})
-    setEditDialogOpen(true)
-  }
-
-  const handleSave = async () => {
-    try {
-      await companyAssignmentAPI.update(selectedAssignment.id, formData)
-      setEditDialogOpen(false)
-      setSelectedAssignment(null)
-      loadAssignments()
-    } catch (error) {
-      alert(error.response?.data?.message || 'Error updating assignment')
-    }
-  }
-
   const handleDelete = async () => {
     try {
-      await companyAssignmentAPI.delete(selectedAssignment.id)
+      await projectAssignmentAPI.delete(selectedAssignment.id)
       setDeleteDialogOpen(false)
       setSelectedAssignment(null)
       loadAssignments()
@@ -236,23 +149,16 @@ export const CompanyAssignments = () => {
     }
   }
 
-  // Assignment mass assignment functions
   const handleAssignmentChange = (orgDetailId, field, value, skipValidationReset = false) => {
     setAssignmentData(prev => {
       const orgData = prev[orgDetailId] || {}
       const updated = { ...orgData, [field]: value }
-      
-      // Reset validation when worker/email/position changes (unless we're auto-filling)
       if (!skipValidationReset && (field === 'workerId' || field === 'emailId' || field === 'positionId')) {
         updated.validationStatus = null
         updated.validatedUser = null
         updated.error = null
       }
-      
-      const newState = {
-        ...prev,
-        [orgDetailId]: updated
-      }
+      const newState = { ...prev, [orgDetailId]: updated }
       assignmentDataRef.current = newState
       return newState
     })
@@ -263,12 +169,9 @@ export const CompanyAssignments = () => {
       handleAssignmentChange(orgDetailId, 'validationStatus', 'skip')
       handleAssignmentChange(orgDetailId, 'validatedUser', null)
       handleAssignmentChange(orgDetailId, 'error', null)
-      handleAssignmentChange(orgDetailId, 'foundEmployees', null)
       return
     }
-
     handleAssignmentChange(orgDetailId, 'validationStatus', 'validating')
-    
     try {
       const response = await employeeAPI.findByWorkerId(workerId.trim())
       const employees = response.data
@@ -283,7 +186,6 @@ export const CompanyAssignments = () => {
       }
       
       if (employees.length === 1) {
-        // Single employee found, auto-select
         const employee = employees[0]
         handleAssignmentChange(orgDetailId, 'emailId', employee.email || '', true)
         handleAssignmentChange(orgDetailId, 'positionId', employee.positionId || '', true)
@@ -292,7 +194,6 @@ export const CompanyAssignments = () => {
         handleAssignmentChange(orgDetailId, 'error', null, true)
         handleAssignmentChange(orgDetailId, 'foundEmployees', null)
       } else {
-        // Multiple employees found, show selection modal
         handleAssignmentChange(orgDetailId, 'validationStatus', 'multiple')
         handleAssignmentChange(orgDetailId, 'validatedUser', null)
         handleAssignmentChange(orgDetailId, 'error', null)
@@ -319,9 +220,7 @@ export const CompanyAssignments = () => {
       handleAssignmentChange(orgDetailId, 'foundEmployees', null)
       return
     }
-
     handleAssignmentChange(orgDetailId, 'validationStatus', 'validating')
-    
     try {
       const response = await employeeAPI.findByEmail(emailId.trim())
       const employees = response.data
@@ -336,7 +235,6 @@ export const CompanyAssignments = () => {
       }
       
       if (employees.length === 1) {
-        // Single employee found, auto-select
         const employee = employees[0]
         handleAssignmentChange(orgDetailId, 'workerId', employee.employeeId || '', true)
         handleAssignmentChange(orgDetailId, 'positionId', employee.positionId || '', true)
@@ -345,7 +243,6 @@ export const CompanyAssignments = () => {
         handleAssignmentChange(orgDetailId, 'error', null, true)
         handleAssignmentChange(orgDetailId, 'foundEmployees', null)
       } else {
-        // Multiple employees found, show selection modal
         handleAssignmentChange(orgDetailId, 'validationStatus', 'multiple')
         handleAssignmentChange(orgDetailId, 'validatedUser', null)
         handleAssignmentChange(orgDetailId, 'error', null)
@@ -372,9 +269,7 @@ export const CompanyAssignments = () => {
       handleAssignmentChange(orgDetailId, 'foundEmployees', null)
       return
     }
-
     handleAssignmentChange(orgDetailId, 'validationStatus', 'validating')
-    
     try {
       const response = await employeeAPI.findByPositionId(positionId.trim())
       const employees = response.data
@@ -389,7 +284,6 @@ export const CompanyAssignments = () => {
       }
       
       if (employees.length === 1) {
-        // Single employee found, auto-select
         const employee = employees[0]
         handleAssignmentChange(orgDetailId, 'workerId', employee.employeeId || '', true)
         handleAssignmentChange(orgDetailId, 'emailId', employee.email || '', true)
@@ -398,7 +292,6 @@ export const CompanyAssignments = () => {
         handleAssignmentChange(orgDetailId, 'error', null, true)
         handleAssignmentChange(orgDetailId, 'foundEmployees', null)
       } else {
-        // Multiple employees found, show selection modal
         handleAssignmentChange(orgDetailId, 'validationStatus', 'multiple')
         handleAssignmentChange(orgDetailId, 'validatedUser', null)
         handleAssignmentChange(orgDetailId, 'error', null)
@@ -422,7 +315,6 @@ export const CompanyAssignments = () => {
     handleAssignmentChange(orgDetailId, 'validationStatus', 'valid', true)
     handleAssignmentChange(orgDetailId, 'error', null, true)
     
-    // Fill in the other fields based on selected employee
     if (selectedEmployee.employeeId) {
       handleAssignmentChange(orgDetailId, 'workerId', selectedEmployee.employeeId, true)
     }
@@ -433,7 +325,6 @@ export const CompanyAssignments = () => {
       handleAssignmentChange(orgDetailId, 'positionId', selectedEmployee.positionId, true)
     }
     
-    // Clear the found employees list
     handleAssignmentChange(orgDetailId, 'foundEmployees', null, true)
     
     // Close modal
@@ -449,7 +340,6 @@ export const CompanyAssignments = () => {
   const validateAssignment = async (orgDetailId, currentData = null) => {
     const orgData = currentData || assignmentData[orgDetailId] || {}
     const { workerId, emailId, positionId } = orgData
-    
     if (workerId?.trim()) {
       await validateWorkerId(orgDetailId, workerId)
     } else if (emailId?.trim()) {
@@ -466,15 +356,12 @@ export const CompanyAssignments = () => {
   const validateAll = async () => {
     const currentState = getLatestAssignmentData()
     const orgDetailIds = Object.keys(currentState)
-    
     for (const orgDetailId of orgDetailIds) {
       const data = currentState[orgDetailId]
       if (!data) continue
-      
       const workerId = (data.workerId || '').trim()
       const emailId = (data.emailId || '').trim()
       const positionId = (data.positionId || '').trim()
-      
       if ((workerId || emailId || positionId) && data.validationStatus !== 'valid') {
         await validateAssignment(parseInt(orgDetailId), data)
         await new Promise(resolve => setTimeout(resolve, 100))
@@ -485,7 +372,6 @@ export const CompanyAssignments = () => {
   const handleSaveAll = async () => {
     await validateAll()
     await new Promise(resolve => setTimeout(resolve, 800))
-    
     const latestState = getLatestAssignmentData()
     const validAssignments = Object.entries(latestState)
       .filter(([orgDetailId, data]) => {
@@ -493,42 +379,31 @@ export const CompanyAssignments = () => {
         const workerId = (data.workerId || '').trim()
         const emailId = (data.emailId || '').trim()
         const positionId = (data.positionId || '').trim()
-        
         if (!workerId && !emailId && !positionId) return false
         return data.validationStatus === 'valid' && data.validatedUser && data.validatedUser.id
       })
-    
     if (validAssignments.length === 0) {
       alert('No valid assignments to save. Please ensure all assignments have valid user data and have been validated (shown as "Valid" in the Status column).')
       return
     }
-
     setSavingAssignments(true)
     const results = { success: [], errors: [] }
-
     try {
       for (const [orgDetailId, data] of validAssignments) {
         try {
           if (!data.validatedUser || !data.validatedUser.id) {
             throw new Error('Validated user is missing or has no ID')
           }
-          
-          const assignmentPayload = {
-            userId: data.validatedUser.id
-          }
-
+          const assignmentPayload = { userId: data.validatedUser.id }
           await organizationDetailAPI.assignEmployee(parseInt(orgDetailId), assignmentPayload)
-          
           const orgDetail = allOrganizationDetails.find(org => org.id.toString() === orgDetailId)
           const orgName = orgDetail ? (orgDetail.organization || orgDetail.legacyOrganizationName || `ID: ${orgDetail.id}`) : `ID: ${orgDetailId}`
           const userName = `${data.validatedUser.firstName} ${data.validatedUser.lastName} (${data.validatedUser.email})`
-          
           results.success.push({ organization: orgName, user: userName })
         } catch (error) {
           const orgDetail = allOrganizationDetails.find(org => org.id.toString() === orgDetailId)
           const orgName = orgDetail ? (orgDetail.organization || orgDetail.legacyOrganizationName || `ID: ${orgDetail.id}`) : `ID: ${orgDetailId}`
           const userName = data.validatedUser ? `${data.validatedUser.firstName} ${data.validatedUser.lastName} (${data.validatedUser.email})` : 'Unknown user'
-          
           results.errors.push({
             organization: orgName,
             user: userName,
@@ -536,9 +411,7 @@ export const CompanyAssignments = () => {
           })
         }
       }
-
       setSaveResults(results)
-      
       const savedOrgDetailIds = results.success.map(s => {
         const entry = validAssignments.find(([id, data]) => {
           const orgDetail = allOrganizationDetails.find(org => org.id.toString() === id)
@@ -548,7 +421,6 @@ export const CompanyAssignments = () => {
         })
         return entry ? parseInt(entry[0]) : null
       }).filter(id => id !== null)
-
       setAssignmentData(prev => {
         const updated = { ...prev }
         savedOrgDetailIds.forEach(id => {
@@ -564,7 +436,6 @@ export const CompanyAssignments = () => {
         assignmentDataRef.current = updated
         return updated
       })
-      
     } catch (error) {
       alert('Error saving assignments: ' + (error.response?.data?.message || error.message))
     } finally {
@@ -585,8 +456,8 @@ export const CompanyAssignments = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Company Assignments</h1>
-          <p className="text-muted-foreground">Manage company assignments for users</p>
+          <h1 className="text-3xl font-bold">Project Assignments</h1>
+          <p className="text-muted-foreground">Manage project assignments for users</p>
         </div>
         <div className="flex gap-2">
           <Button 
@@ -603,18 +474,11 @@ export const CompanyAssignments = () => {
             <Users className="mr-2 h-4 w-4" />
             Show Assigned Employees
           </Button>
-          {mode === 'show' && (
-            <Button onClick={handleExportExcel} variant="outline">
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
-              Export Excel
-            </Button>
-          )}
         </div>
       </div>
 
       {mode === 'show' ? (
         <>
-          {/* Search and Filters */}
           <div className="flex items-center gap-4">
             <div className="flex-1 flex gap-2">
               <Input
@@ -637,7 +501,6 @@ export const CompanyAssignments = () => {
             </Select>
           </div>
 
-          {/* Assignments Table */}
           <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
@@ -660,7 +523,7 @@ export const CompanyAssignments = () => {
                 ) : assignments.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8">
-                      No company assignments found
+                      No project assignments found
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -691,17 +554,12 @@ export const CompanyAssignments = () => {
             </Table>
           </div>
 
-          {/* Pagination */}
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
               Showing {page * size + 1} to {Math.min((page + 1) * size, totalElements)} of {totalElements} assignments
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setPage(page - 1)}
-                disabled={page === 0}
-              >
+              <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 0}>
                 <ChevronLeft className="h-4 w-4" />
                 Previous
               </Button>
@@ -729,11 +587,7 @@ export const CompanyAssignments = () => {
                   )
                 })}
               </div>
-              <Button
-                variant="outline"
-                onClick={() => setPage(page + 1)}
-                disabled={page >= totalPages - 1}
-              >
+              <Button variant="outline" onClick={() => setPage(page + 1)} disabled={page >= totalPages - 1}>
                 Next
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -742,7 +596,6 @@ export const CompanyAssignments = () => {
         </>
       ) : (
         <>
-          {/* Organization Search */}
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <Label htmlFor="orgSearch">Search Organization Details (local search)</Label>
@@ -768,7 +621,6 @@ export const CompanyAssignments = () => {
             </div>
           </div>
 
-          {/* Save Results */}
           {saveResults && (
             <div className="border rounded-lg p-4 space-y-3">
               <h4 className="font-semibold">Save Results</h4>
@@ -801,14 +653,13 @@ export const CompanyAssignments = () => {
             </div>
           )}
 
-          {/* Organization Details Table with Assignment Fields */}
           {loading ? (
             <div className="border rounded-lg p-8 text-center text-muted-foreground">
               Loading organization details...
             </div>
           ) : filteredOrganizationDetails.length === 0 ? (
             <div className="border rounded-lg p-8 text-center text-muted-foreground">
-              No organization details found for Company type
+              No organization details found for Project type
             </div>
           ) : (
             <div className="rounded-md border overflow-x-auto">
@@ -831,7 +682,6 @@ export const CompanyAssignments = () => {
                     const emailId = (orgData.emailId || '').trim()
                     const positionId = (orgData.positionId || '').trim()
                     const hasAnyId = workerId || emailId || positionId
-                    
                     return (
                       <TableRow key={orgDetail.id}>
                         <TableCell>{orgDetail.legacyOrganizationName || '-'}</TableCell>
@@ -947,36 +797,12 @@ export const CompanyAssignments = () => {
         </>
       )}
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Company Assignment</DialogTitle>
-            <DialogDescription>
-              Company assignments don't have additional roles to configure.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              Company assignments are simple relationships between users and organizations. No additional configuration is needed.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Company Assignment</DialogTitle>
+            <DialogTitle>Delete Project Assignment</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this gift assignment? This action cannot be undone.
+              Are you sure you want to delete this project assignment? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1050,3 +876,4 @@ export const CompanyAssignments = () => {
     </div>
   )
 }
+

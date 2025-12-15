@@ -1,22 +1,12 @@
 package com.pwc.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "academic_unit_assignments")
-public class AcademicUnitAssignment {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_detail_id", nullable = false)
-    private OrganizationDetail organizationDetail;
+public class AcademicUnitAssignment extends BaseAssignment {
     
     @Column(name = "hcm_academic_chair_au")
     private Boolean hcmAcademicChairAu = false;
@@ -37,36 +27,14 @@ public class AcademicUnitAssignment {
     private Boolean hcmAcademicSchoolDirectorAuh = false;
     
     public AcademicUnitAssignment() {
+        super();
     }
     
-    public AcademicUnitAssignment(User user, OrganizationDetail organizationDetail) {
-        this.user = user;
-        this.organizationDetail = organizationDetail;
-    }
-    
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public User getUser() {
-        return user;
-    }
-    
-    public void setUser(User user) {
-        this.user = user;
-    }
-    
-    public OrganizationDetail getOrganizationDetail() {
-        return organizationDetail;
-    }
-    
-    public void setOrganizationDetail(OrganizationDetail organizationDetail) {
-        this.organizationDetail = organizationDetail;
+    public AcademicUnitAssignment(Employee employee, OrganizationDetail organizationDetail, User createdBy) {
+        super();
+        setEmployee(employee);
+        setOrganizationDetail(organizationDetail);
+        setCreatedBy(createdBy);
     }
     
     public Boolean getHcmAcademicChairAu() {
@@ -117,6 +85,9 @@ public class AcademicUnitAssignment {
         this.hcmAcademicSchoolDirectorAuh = hcmAcademicSchoolDirectorAuh;
     }
 }
+
+
+
 
 
 

@@ -40,6 +40,30 @@ export const authAPI = {
     api.post('/auth/change-password', { email, newPassword }),
 }
 
+export const employeeAPI = {
+  getAll: (page = 0, size = 100, sortBy = 'id', sortDir = 'asc', search = '') =>
+    api.get('/employees', {
+      params: { page, size, sortBy, sortDir, search },
+    }),
+  getById: (id) => api.get(`/employees/${id}`),
+  create: (data) => api.post('/employees', data),
+  update: (id, data) => api.put(`/employees/${id}`, data),
+  delete: (id) => api.delete(`/employees/${id}`),
+  search: (query) => api.get('/employees/search', { params: { query } }),
+  findByWorkerId: (workerId) => api.get('/employees/find-by-worker-id', { params: { workerId } }),
+  findByEmail: (email) => api.get('/employees/find-by-email', { params: { email } }),
+  findByPositionId: (positionId) => api.get('/employees/find-by-position-id', { params: { positionId } }),
+  importCSV: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/employees/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+}
+
 export const userAPI = {
   getAll: (page = 0, size = 100, sortBy = 'id', sortDir = 'asc', search = '', accessFilter = 'all') =>
     api.get('/users', {
@@ -51,16 +75,7 @@ export const userAPI = {
   delete: (id) => api.delete(`/users/${id}`),
   resetPassword: (id) => api.post(`/users/${id}/reset-password`),
   getStats: () => api.get('/users/stats'),
-  search: (query) => api.get('/users/search', { params: { query } }),
-  importCSV: (file) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    return api.post('/users/import', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-  },
+  getMyAssignmentStats: () => api.get('/users/my-assignment-stats'),
 }
 
 export const organizationDetailAPI = {
@@ -73,7 +88,7 @@ export const organizationDetailAPI = {
   create: (data) => api.post('/organization-details', data),
   update: (id, data) => api.put(`/organization-details/${id}`, data),
   delete: (id) => api.delete(`/organization-details/${id}`),
-  assignUser: (id, data) => api.post(`/organization-details/${id}/assign-user`, data),
+  assignEmployee: (id, data) => api.post(`/organization-details/${id}/assign-employee`, data),
   getAssignments: (id) => api.get(`/organization-details/${id}/assignments`),
   importCSV: (file) => {
     const formData = new FormData()
@@ -92,8 +107,8 @@ export const giftAssignmentAPI = {
       params: { page, size, sortBy, sortDir, search },
     }),
   getById: (id) => api.get(`/gift-assignments/${id}`),
-  getByUser: (userId, page = 0, size = 100) =>
-    api.get(`/gift-assignments/user/${userId}`, {
+  getByEmployee: (employeeId, page = 0, size = 100) =>
+    api.get(`/gift-assignments/employee/${employeeId}`, {
       params: { page, size },
     }),
   create: (data) => api.post('/gift-assignments', data),
@@ -107,8 +122,8 @@ export const academicUnitAssignmentAPI = {
       params: { page, size, sortBy, sortDir, search },
     }),
   getById: (id) => api.get(`/academic-unit-assignments/${id}`),
-  getByUser: (userId, page = 0, size = 100) =>
-    api.get(`/academic-unit-assignments/user/${userId}`, {
+  getByEmployee: (employeeId, page = 0, size = 100) =>
+    api.get(`/academic-unit-assignments/employee/${employeeId}`, {
       params: { page, size },
     }),
   create: (data) => api.post('/academic-unit-assignments', data),
@@ -122,13 +137,73 @@ export const companyAssignmentAPI = {
       params: { page, size, sortBy, sortDir, search },
     }),
   getById: (id) => api.get(`/company-assignments/${id}`),
-  getByUser: (userId, page = 0, size = 100) =>
-    api.get(`/company-assignments/user/${userId}`, {
+  getByEmployee: (employeeId, page = 0, size = 100) =>
+    api.get(`/company-assignments/employee/${employeeId}`, {
       params: { page, size },
     }),
   create: (data) => api.post('/company-assignments', data),
   update: (id, data) => api.put(`/company-assignments/${id}`, data),
   delete: (id) => api.delete(`/company-assignments/${id}`),
+}
+
+export const locationAssignmentAPI = {
+  getAll: (page = 0, size = 100, sortBy = 'id', sortDir = 'asc', search = '') =>
+    api.get('/location-assignments', {
+      params: { page, size, sortBy, sortDir, search },
+    }),
+  getById: (id) => api.get(`/location-assignments/${id}`),
+  getByEmployee: (employeeId, page = 0, size = 100) =>
+    api.get(`/location-assignments/employee/${employeeId}`, {
+      params: { page, size },
+    }),
+  create: (data) => api.post('/location-assignments', data),
+  update: (id, data) => api.put(`/location-assignments/${id}`, data),
+  delete: (id) => api.delete(`/location-assignments/${id}`),
+}
+
+export const projectAssignmentAPI = {
+  getAll: (page = 0, size = 100, sortBy = 'id', sortDir = 'asc', search = '') =>
+    api.get('/project-assignments', {
+      params: { page, size, sortBy, sortDir, search },
+    }),
+  getById: (id) => api.get(`/project-assignments/${id}`),
+  getByEmployee: (employeeId, page = 0, size = 100) =>
+    api.get(`/project-assignments/employee/${employeeId}`, {
+      params: { page, size },
+    }),
+  create: (data) => api.post('/project-assignments', data),
+  update: (id, data) => api.put(`/project-assignments/${id}`, data),
+  delete: (id) => api.delete(`/project-assignments/${id}`),
+}
+
+export const grantAssignmentAPI = {
+  getAll: (page = 0, size = 100, sortBy = 'id', sortDir = 'asc', search = '') =>
+    api.get('/grant-assignments', {
+      params: { page, size, sortBy, sortDir, search },
+    }),
+  getById: (id) => api.get(`/grant-assignments/${id}`),
+  getByEmployee: (employeeId, page = 0, size = 100) =>
+    api.get(`/grant-assignments/employee/${employeeId}`, {
+      params: { page, size },
+    }),
+  create: (data) => api.post('/grant-assignments', data),
+  update: (id, data) => api.put(`/grant-assignments/${id}`, data),
+  delete: (id) => api.delete(`/grant-assignments/${id}`),
+}
+
+export const paygroupAssignmentAPI = {
+  getAll: (page = 0, size = 100, sortBy = 'id', sortDir = 'asc', search = '') =>
+    api.get('/paygroup-assignments', {
+      params: { page, size, sortBy, sortDir, search },
+    }),
+  getById: (id) => api.get(`/paygroup-assignments/${id}`),
+  getByEmployee: (employeeId, page = 0, size = 100) =>
+    api.get(`/paygroup-assignments/employee/${employeeId}`, {
+      params: { page, size },
+    }),
+  create: (data) => api.post('/paygroup-assignments', data),
+  update: (id, data) => api.put(`/paygroup-assignments/${id}`, data),
+  delete: (id) => api.delete(`/paygroup-assignments/${id}`),
 }
 
 export default api
