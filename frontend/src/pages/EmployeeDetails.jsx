@@ -107,12 +107,12 @@ export const EmployeeDetails = () => {
   const handleEdit = (employee) => {
     setEditingEmployee(employee)
     setFormData({
-      employeeId: employee.employeeId,
-      firstName: employee.firstName,
-      lastName: employee.lastName,
+      employeeId: employee.employeeId || '',
+      firstName: employee.firstName || '',
+      lastName: employee.lastName || '',
       positionId: employee.positionId || '',
       positionTitle: employee.positionTitle || '',
-      email: employee.email,
+      email: employee.email || '',
     })
     setDialogOpen(true)
   }
@@ -176,12 +176,12 @@ export const EmployeeDetails = () => {
       // Prepare data for Excel
       const excelData = allEmployees.map(emp => ({
         'ID': emp.id,
-        'Employee ID': emp.employeeId,
+        'Employee ID': emp.employeeId || '',
         'First Name': emp.firstName || '',
         'Last Name': emp.lastName || '',
-        'Email': emp.email || '',
         'Position ID': emp.positionId || '',
-        'Position Title': emp.positionTitle || ''
+        'Position Title': emp.positionTitle || '',
+        'Email': emp.email || ''
       }))
       
       // Create workbook and worksheet
@@ -217,10 +217,6 @@ export const EmployeeDetails = () => {
           <p className="text-muted-foreground">Manage employees and their information</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Employee
-          </Button>
           <Button onClick={() => setImportDialogOpen(true)} variant="outline">
             <Upload className="mr-2 h-4 w-4" />
             Import CSV
@@ -228,6 +224,10 @@ export const EmployeeDetails = () => {
           <Button onClick={handleExportExcel} variant="outline">
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             Export Excel
+          </Button>
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Employee
           </Button>
         </div>
       </div>
@@ -264,21 +264,22 @@ export const EmployeeDetails = () => {
               <SortableHeader column="employeeId">Employee ID</SortableHeader>
               <SortableHeader column="firstName">First Name</SortableHeader>
               <SortableHeader column="lastName">Last Name</SortableHeader>
-              <SortableHeader column="email">Email</SortableHeader>
+              <SortableHeader column="positionId">Position ID</SortableHeader>
               <SortableHeader column="positionTitle">Position Title</SortableHeader>
+              <SortableHeader column="email">Email</SortableHeader>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : employees.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   No employees found
                 </TableCell>
               </TableRow>
@@ -286,11 +287,12 @@ export const EmployeeDetails = () => {
               employees.map((employee) => (
                 <TableRow key={employee.id}>
                   <TableCell>{employee.id}</TableCell>
-                  <TableCell>{employee.employeeId}</TableCell>
-                  <TableCell>{employee.firstName}</TableCell>
-                  <TableCell>{employee.lastName}</TableCell>
-                  <TableCell>{employee.email}</TableCell>
+                  <TableCell>{employee.employeeId || '-'}</TableCell>
+                  <TableCell>{employee.firstName || '-'}</TableCell>
+                  <TableCell>{employee.lastName || '-'}</TableCell>
+                  <TableCell>{employee.positionId || '-'}</TableCell>
                   <TableCell>{employee.positionTitle || '-'}</TableCell>
+                  <TableCell>{employee.email || '-'}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
@@ -372,7 +374,7 @@ export const EmployeeDetails = () => {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingEmployee ? 'Edit Employee' : 'Create Employee'}</DialogTitle>
             <DialogDescription>
@@ -391,33 +393,30 @@ export const EmployeeDetails = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
+                <Label htmlFor="firstName">First Name</Label>
                 <Input
                   id="firstName"
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
+                <Label htmlFor="lastName">Last Name</Label>
                 <Input
                   id="lastName"
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  required
                 />
               </div>
             </div>
@@ -473,10 +472,10 @@ export const EmployeeDetails = () => {
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Import Users from CSV</DialogTitle>
+            <DialogTitle>Import Employees from CSV</DialogTitle>
             <DialogDescription>
-              Upload a CSV file with user data. Required columns: email, employeeId, firstName, lastName.
-              Optional columns: positionId, positionTitle, password, role.
+              Upload a CSV file with employee data. Required columns: employeeId.
+              Optional columns: firstName, lastName, positionId, positionTitle, email.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -507,4 +506,3 @@ export const EmployeeDetails = () => {
     </div>
   )
 }
-

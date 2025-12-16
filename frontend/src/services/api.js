@@ -206,5 +206,21 @@ export const paygroupAssignmentAPI = {
   delete: (id) => api.delete(`/paygroup-assignments/${id}`),
 }
 
+export const parameterAPI = {
+  getAll: () => api.get('/parameters'),
+  getByKey: (key) => api.get(`/parameters/${key}`),
+  getImageUrl: (key) => `${API_BASE_URL}/parameters/image/${key}`,
+  save: (parameter) => api.post('/parameters', parameter),
+  uploadImage: (key, file, description) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (description) formData.append('description', description)
+    return api.post(`/parameters/upload/${key}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
+  delete: (key) => api.delete(`/parameters/${key}`)
+}
+
 export default api
 

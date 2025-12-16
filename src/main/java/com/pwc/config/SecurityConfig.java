@@ -39,6 +39,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/parameters/{key}").permitAll() // Allow public parameter access (e.g., logo)
+                .requestMatchers("/api/parameters/image/{key}").permitAll() // Allow public image access
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/error").permitAll() // Allow error endpoint for proper error handling
                 .requestMatchers("/api/**").authenticated()

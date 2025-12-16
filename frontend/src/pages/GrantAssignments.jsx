@@ -844,7 +844,7 @@ export const GrantAssignments = () => {
                     <div>Worker ID: {emp.employeeId || 'N/A'}</div>
                     {emp.email && <div>Email: {emp.email}</div>}
                     {emp.positionId && <div>Position ID: {emp.positionId}</div>}
-                    {emp.positionTitle && <div>Position: {emp.positionTitle}</div>}
+                    <div>Position Title: {emp.positionTitle || 'N/A'}</div>
                   </div>
                 </div>
                 <Button

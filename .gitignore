@@ -48,6 +48,9 @@ src/main/resources/static/index.html
 
 excels/
 
+# Uploaded files (logos, images, etc.)
+uploads/
+
 
 
 

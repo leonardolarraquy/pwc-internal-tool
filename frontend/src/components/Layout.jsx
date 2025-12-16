@@ -48,8 +48,8 @@ export const Layout = () => {
     menuItems.push({ path: '/project-assignments', label: 'Project Assignments', icon: FolderKanban, disabled: true })
     menuItems.push({ path: '/grant-assignments', label: 'Grant Assignments', icon: Award, disabled: true })
     menuItems.push({ path: '/paygroup-assignments', label: 'Paygroup Assignments', icon: UsersRound, disabled: true })
-    // Configuration at the end, disabled for now
-    menuItems.push({ path: '/configuration', label: 'Configuration', icon: Settings, disabled: true })
+    // Configuration at the end
+    menuItems.push({ path: '/configuration', label: 'Configuration', icon: Settings })
   } else {
     // Regular users only see pages they have access to
     if (hasCompanyAssignmentsAccess()) {

@@ -103,8 +103,8 @@ export const CompanyAssignments = () => {
       setTotalPages(data.totalPages)
       setTotalElements(data.totalElements)
     } catch (error) {
-      console.error('Error loading gift assignments:', error)
-      alert(error.response?.data?.message || 'Error loading gift assignments')
+      console.error('Error loading company assignments:', error)
+      alert(error.response?.data?.message || 'Error loading company assignments')
     } finally {
       setLoading(false)
     }
@@ -976,7 +976,7 @@ export const CompanyAssignments = () => {
           <DialogHeader>
             <DialogTitle>Delete Company Assignment</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this gift assignment? This action cannot be undone.
+              Are you sure you want to delete this company assignment? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1018,7 +1018,7 @@ export const CompanyAssignments = () => {
                     <div>Worker ID: {emp.employeeId || 'N/A'}</div>
                     {emp.email && <div>Email: {emp.email}</div>}
                     {emp.positionId && <div>Position ID: {emp.positionId}</div>}
-                    {emp.positionTitle && <div>Position: {emp.positionTitle}</div>}
+                    <div>Position Title: {emp.positionTitle || 'N/A'}</div>
                   </div>
                 </div>
                 <Button
