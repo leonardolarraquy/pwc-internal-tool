@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { parameterAPI } from '../services/api'
-import { Upload, Trash2, Loader2, ImageIcon } from 'lucide-react'
+import { Upload, Trash2, Loader2, ImageIcon, Type } from 'lucide-react'
 
 export const Configuration = () => {
   const [parameters, setParameters] = useState([])
@@ -14,6 +14,9 @@ export const Configuration = () => {
   const [currentLogo, setCurrentLogo] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState(null)
+  const [loginTitle, setLoginTitle] = useState('Welcome Back')
+  const [loginSubtitle, setLoginSubtitle] = useState('Sign in to your account to continue')
+  const [savingTexts, setSavingTexts] = useState(false)
 
   useEffect(() => {
     loadParameters()
@@ -29,6 +32,12 @@ export const Configuration = () => {
       if (logoParam) {
         setCurrentLogo(parameterAPI.getImageUrl('logo') + '?t=' + Date.now())
       }
+      
+      // Load login text parameters
+      const titleParam = response.data.find(p => p.paramKey === 'login_title')
+      if (titleParam?.paramValue) setLoginTitle(titleParam.paramValue)
+      const subtitleParam = response.data.find(p => p.paramKey === 'login_subtitle')
+      if (subtitleParam?.paramValue) setLoginSubtitle(subtitleParam.paramValue)
     } catch (error) {
       console.error('Error loading parameters:', error)
     } finally {
@@ -99,6 +108,34 @@ export const Configuration = () => {
     // Reset the file input
     const fileInput = document.getElementById('logo-upload')
     if (fileInput) fileInput.value = ''
+  }
+
+  const handleSaveLoginTexts = async () => {
+    setSavingTexts(true)
+    setMessage(null)
+    try {
+      await Promise.all([
+        parameterAPI.save({ 
+          paramKey: 'login_title', 
+          paramValue: loginTitle, 
+          paramType: 'text', 
+          description: 'Login page title' 
+        }),
+        parameterAPI.save({ 
+          paramKey: 'login_subtitle', 
+          paramValue: loginSubtitle, 
+          paramType: 'text', 
+          description: 'Login page subtitle' 
+        })
+      ])
+      setMessage({ type: 'success', text: 'Login texts updated successfully!' })
+      loadParameters() // Reload to refresh the parameters table
+    } catch (error) {
+      console.error('Error saving login texts:', error)
+      setMessage({ type: 'error', text: 'Error saving login texts. Please try again.' })
+    } finally {
+      setSavingTexts(false)
+    }
   }
 
   return (
@@ -215,6 +252,51 @@ export const Configuration = () => {
               )}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Login Page Texts Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Type className="h-5 w-5" />
+            Login Page Texts
+          </CardTitle>
+          <CardDescription>
+            Customize the welcome message displayed on the login page.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="login-title">Title</Label>
+            <Input
+              id="login-title"
+              value={loginTitle}
+              onChange={(e) => setLoginTitle(e.target.value)}
+              placeholder="Welcome Back"
+              disabled={savingTexts}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="login-subtitle">Subtitle</Label>
+            <Input
+              id="login-subtitle"
+              value={loginSubtitle}
+              onChange={(e) => setLoginSubtitle(e.target.value)}
+              placeholder="Sign in to your account to continue"
+              disabled={savingTexts}
+            />
+          </div>
+          <Button onClick={handleSaveLoginTexts} disabled={savingTexts}>
+            {savingTexts ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
         </CardContent>
       </Card>
 

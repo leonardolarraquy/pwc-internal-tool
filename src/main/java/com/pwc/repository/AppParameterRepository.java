@@ -10,3 +10,4 @@ public interface AppParameterRepository extends JpaRepository<AppParameter, Long
     Optional<AppParameter> findByParamKey(String paramKey);
 }
 
+

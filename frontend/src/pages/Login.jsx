@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { authAPI } from '../services/api'
+import { authAPI, parameterAPI } from '../services/api'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -13,8 +13,26 @@ export const Login = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loginTitle, setLoginTitle] = useState('Welcome Back')
+  const [loginSubtitle, setLoginSubtitle] = useState('Sign in to your account to continue')
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const loadLoginTexts = async () => {
+      try {
+        const [titleRes, subtitleRes] = await Promise.all([
+          parameterAPI.getByKey('login_title').catch(() => null),
+          parameterAPI.getByKey('login_subtitle').catch(() => null)
+        ])
+        if (titleRes?.data?.paramValue) setLoginTitle(titleRes.data.paramValue)
+        if (subtitleRes?.data?.paramValue) setLoginSubtitle(subtitleRes.data.paramValue)
+      } catch (error) {
+        // Use defaults on error
+      }
+    }
+    loadLoginTexts()
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -68,9 +86,9 @@ export const Login = () => {
           <div className="flex justify-center mb-4">
             <PwcLogo className="h-16" />
           </div>
-          <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl text-center">{loginTitle}</CardTitle>
           <CardDescription className="text-center">
-            Sign in to your account to continue
+            {loginSubtitle}
           </CardDescription>
         </CardHeader>
         <CardContent>
