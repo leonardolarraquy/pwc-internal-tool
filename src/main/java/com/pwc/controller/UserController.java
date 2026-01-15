@@ -1,12 +1,7 @@
 package com.pwc.controller;
 
 import com.pwc.dto.*;
-import com.pwc.model.User;
-import com.pwc.repository.AcademicUnitAssignmentRepository;
-import com.pwc.repository.CompanyAssignmentRepository;
-import com.pwc.repository.GiftAssignmentRepository;
 import com.pwc.service.UserService;
-import com.pwc.util.SecurityUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,22 +15,9 @@ import java.util.Map;
 public class UserController {
     
     private final UserService userService;
-    private final CompanyAssignmentRepository companyAssignmentRepository;
-    private final AcademicUnitAssignmentRepository academicUnitAssignmentRepository;
-    private final GiftAssignmentRepository giftAssignmentRepository;
-    private final SecurityUtil securityUtil;
     
-    public UserController(
-            UserService userService,
-            CompanyAssignmentRepository companyAssignmentRepository,
-            AcademicUnitAssignmentRepository academicUnitAssignmentRepository,
-            GiftAssignmentRepository giftAssignmentRepository,
-            SecurityUtil securityUtil) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.companyAssignmentRepository = companyAssignmentRepository;
-        this.academicUnitAssignmentRepository = academicUnitAssignmentRepository;
-        this.giftAssignmentRepository = giftAssignmentRepository;
-        this.securityUtil = securityUtil;
     }
     
     @GetMapping
@@ -55,18 +37,6 @@ public class UserController {
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Long>> getUserStatistics() {
         Map<String, Long> stats = userService.getUserStatistics();
-        return ResponseEntity.ok(stats);
-    }
-    
-    @GetMapping("/my-assignment-stats")
-    public ResponseEntity<Map<String, Long>> getMyAssignmentStats() {
-        User currentUser = securityUtil.getCurrentUser();
-        
-        Map<String, Long> stats = new HashMap<>();
-        stats.put("companyAssignments", companyAssignmentRepository.countByCreatedById(currentUser.getId()));
-        stats.put("academicUnitAssignments", academicUnitAssignmentRepository.countByCreatedById(currentUser.getId()));
-        stats.put("giftAssignments", giftAssignmentRepository.countByCreatedById(currentUser.getId()));
-        
         return ResponseEntity.ok(stats);
     }
     

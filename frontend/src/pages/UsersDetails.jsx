@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { userAPI } from '../services/api'
+import { userAPI, organizationTypeAPI } from '../services/api'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -43,6 +43,9 @@ export const UsersDetails = () => {
   const [searchInput, setSearchInput] = useState('')
   const [accessFilter, setAccessFilter] = useState('all')
   
+  // Dynamic organization types
+  const [organizationTypes, setOrganizationTypes] = useState([])
+  
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false)
@@ -55,18 +58,25 @@ export const UsersDetails = () => {
     email: '',
     password: '',
     role: 'USER',
-    companyAssignmentsAccess: false,
-    academicUnitAssignmentsAccess: false,
-    giftAssignmentsAccess: false,
-    locationAssignmentsAccess: false,
-    projectAssignmentsAccess: false,
-    grantAssignmentsAccess: false,
-    paygroupAssignmentsAccess: false,
+    organizationAccess: {}, // Dynamic: { orgTypeId: boolean }
   })
+
+  useEffect(() => {
+    loadOrganizationTypes()
+  }, [])
 
   useEffect(() => {
     loadUsers()
   }, [page, size, sortBy, sortDir, search, accessFilter])
+
+  const loadOrganizationTypes = async () => {
+    try {
+      const response = await organizationTypeAPI.getActive()
+      setOrganizationTypes(response.data || [])
+    } catch (error) {
+      console.error('Error loading organization types:', error)
+    }
+  }
 
   const loadUsers = async () => {
     setLoading(true)
@@ -100,6 +110,11 @@ export const UsersDetails = () => {
 
   const handleCreate = () => {
     setEditingUser(null)
+    // Initialize all organization access to false
+    const initialAccess = {}
+    organizationTypes.forEach(orgType => {
+      initialAccess[orgType.id] = false
+    })
     setFormData({
       firstName: '',
       lastName: '',
@@ -107,19 +122,18 @@ export const UsersDetails = () => {
       email: '',
       password: '',
       role: 'USER',
-      companyAssignmentsAccess: false,
-      academicUnitAssignmentsAccess: false,
-      giftAssignmentsAccess: false,
-      locationAssignmentsAccess: false,
-      projectAssignmentsAccess: false,
-      grantAssignmentsAccess: false,
-      paygroupAssignmentsAccess: false,
+      organizationAccess: initialAccess,
     })
     setDialogOpen(true)
   }
 
   const handleEdit = (user) => {
     setEditingUser(user)
+    // Build organization access from user data
+    const accessMap = {}
+    organizationTypes.forEach(orgType => {
+      accessMap[orgType.id] = user.organizationAccess?.[orgType.id] || false
+    })
     setFormData({
       firstName: user.firstName,
       lastName: user.lastName,
@@ -127,13 +141,7 @@ export const UsersDetails = () => {
       email: user.email,
       password: '',
       role: user.role,
-      companyAssignmentsAccess: user.companyAssignmentsAccess || false,
-      academicUnitAssignmentsAccess: user.academicUnitAssignmentsAccess || false,
-      giftAssignmentsAccess: user.giftAssignmentsAccess || false,
-      locationAssignmentsAccess: user.locationAssignmentsAccess || false,
-      projectAssignmentsAccess: user.projectAssignmentsAccess || false,
-      grantAssignmentsAccess: user.grantAssignmentsAccess || false,
-      paygroupAssignmentsAccess: user.paygroupAssignmentsAccess || false,
+      organizationAccess: accessMap,
     })
     setDialogOpen(true)
   }
@@ -186,22 +194,22 @@ export const UsersDetails = () => {
       const response = await userAPI.getAll(0, 10000, 'id', 'asc', '', 'all')
       const allUsers = response.data.content
       
-      // Prepare data for Excel
-      const excelData = allUsers.map(user => ({
-        'ID': user.id,
-        'First Name': user.firstName || '',
-        'Last Name': user.lastName || '',
-        'Company': user.company || '',
-        'Email': user.email || '',
-        'Role': user.role || '',
-        'Company Assignments Access': user.companyAssignmentsAccess ? 'Yes' : 'No',
-        'Academic Unit Assignments Access': user.academicUnitAssignmentsAccess ? 'Yes' : 'No',
-        'Gift Assignments Access': user.giftAssignmentsAccess ? 'Yes' : 'No',
-        'Location Assignments Access': user.locationAssignmentsAccess ? 'Yes' : 'No',
-        'Project Assignments Access': user.projectAssignmentsAccess ? 'Yes' : 'No',
-        'Grant Assignments Access': user.grantAssignmentsAccess ? 'Yes' : 'No',
-        'Paygroup Assignments Access': user.paygroupAssignmentsAccess ? 'Yes' : 'No'
-      }))
+      // Prepare data for Excel - dynamically based on organization types
+      const excelData = allUsers.map(user => {
+        const row = {
+          'ID': user.id,
+          'First Name': user.firstName || '',
+          'Last Name': user.lastName || '',
+          'Company': user.company || '',
+          'Email': user.email || '',
+          'Role': user.role || '',
+        }
+        // Add dynamic organization access columns
+        organizationTypes.forEach(orgType => {
+          row[`${orgType.displayName} Access`] = user.organizationAccess?.[orgType.id] ? 'Yes' : 'No'
+        })
+        return row
+      })
       
       // Create workbook and worksheet
       const ws = XLSX.utils.json_to_sheet(excelData)
@@ -219,6 +227,16 @@ export const UsersDetails = () => {
     }
   }
 
+  const handleAccessChange = (orgTypeId, checked) => {
+    setFormData(prev => ({
+      ...prev,
+      organizationAccess: {
+        ...prev.organizationAccess,
+        [orgTypeId]: checked
+      }
+    }))
+  }
+
   const SortableHeader = ({ column, children }) => (
     <TableHead className="cursor-pointer" onClick={() => handleSort(column)}>
       <div className="flex items-center gap-2">
@@ -229,8 +247,8 @@ export const UsersDetails = () => {
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 max-w-full">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold">Users Details</h1>
           <p className="text-muted-foreground">Manage application users and their permissions</p>
@@ -248,8 +266,8 @@ export const UsersDetails = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1 flex gap-2">
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex-1 flex gap-2 min-w-[200px]">
           <Input
             placeholder="Search by name, email, or company..."
             value={searchInput}
@@ -259,18 +277,16 @@ export const UsersDetails = () => {
           <Button onClick={handleSearch}>Search</Button>
         </div>
         <Select value={accessFilter} onValueChange={(val) => { setAccessFilter(val); setPage(0) }}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-56">
             <SelectValue placeholder="Filter by access" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Access Types</SelectItem>
-            <SelectItem value="company">Company Access</SelectItem>
-            <SelectItem value="academic">Academic Unit Access</SelectItem>
-            <SelectItem value="gift">Gift Access</SelectItem>
-            <SelectItem value="location">Location Access</SelectItem>
-            <SelectItem value="project">Project Access</SelectItem>
-            <SelectItem value="grant">Grant Access</SelectItem>
-            <SelectItem value="paygroup">Paygroup Access</SelectItem>
+            {organizationTypes.map(orgType => (
+              <SelectItem key={orgType.id} value={orgType.id.toString()}>
+                {orgType.displayName} Access
+              </SelectItem>
+            ))}
             <SelectItem value="none">No Access</SelectItem>
           </SelectContent>
         </Select>
@@ -287,7 +303,7 @@ export const UsersDetails = () => {
       </div>
 
       {/* Users Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -372,7 +388,7 @@ export const UsersDetails = () => {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="text-sm text-muted-foreground">
           Showing {page * size + 1} to {Math.min((page + 1) * size, totalElements)} of {totalElements} users
         </div>
@@ -496,64 +512,28 @@ export const UsersDetails = () => {
             
             <div className="border-t pt-4 mt-4">
               <Label className="text-base font-semibold">Access Permissions</Label>
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="companyAssignmentsAccess"
-                    checked={formData.companyAssignmentsAccess || false}
-                    onChange={(e) => setFormData({ ...formData, companyAssignmentsAccess: e.target.checked })}
-                  />
-                  <Label htmlFor="companyAssignmentsAccess" className="cursor-pointer">Company Assignments</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="academicUnitAssignmentsAccess"
-                    checked={formData.academicUnitAssignmentsAccess || false}
-                    onChange={(e) => setFormData({ ...formData, academicUnitAssignmentsAccess: e.target.checked })}
-                  />
-                  <Label htmlFor="academicUnitAssignmentsAccess" className="cursor-pointer">Academic Unit Assignments</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="giftAssignmentsAccess"
-                    checked={formData.giftAssignmentsAccess || false}
-                    onChange={(e) => setFormData({ ...formData, giftAssignmentsAccess: e.target.checked })}
-                  />
-                  <Label htmlFor="giftAssignmentsAccess" className="cursor-pointer">Gift Assignments</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="locationAssignmentsAccess"
-                    checked={formData.locationAssignmentsAccess || false}
-                    onChange={(e) => setFormData({ ...formData, locationAssignmentsAccess: e.target.checked })}
-                  />
-                  <Label htmlFor="locationAssignmentsAccess" className="cursor-pointer">Location Assignments</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="projectAssignmentsAccess"
-                    checked={formData.projectAssignmentsAccess || false}
-                    onChange={(e) => setFormData({ ...formData, projectAssignmentsAccess: e.target.checked })}
-                  />
-                  <Label htmlFor="projectAssignmentsAccess" className="cursor-pointer">Project Assignments</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="grantAssignmentsAccess"
-                    checked={formData.grantAssignmentsAccess || false}
-                    onChange={(e) => setFormData({ ...formData, grantAssignmentsAccess: e.target.checked })}
-                  />
-                  <Label htmlFor="grantAssignmentsAccess" className="cursor-pointer">Grant Assignments</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="paygroupAssignmentsAccess"
-                    checked={formData.paygroupAssignmentsAccess || false}
-                    onChange={(e) => setFormData({ ...formData, paygroupAssignmentsAccess: e.target.checked })}
-                  />
-                  <Label htmlFor="paygroupAssignmentsAccess" className="cursor-pointer">Paygroup Assignments</Label>
-                </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Select which assignment types this user can access
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {organizationTypes.map(orgType => (
+                  <div key={orgType.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`access-${orgType.id}`}
+                      checked={formData.organizationAccess[orgType.id] || false}
+                      onChange={(e) => handleAccessChange(orgType.id, e.target.checked)}
+                    />
+                    <Label htmlFor={`access-${orgType.id}`} className="cursor-pointer">
+                      {orgType.displayName}
+                    </Label>
+                  </div>
+                ))}
               </div>
+              {organizationTypes.length === 0 && (
+                <p className="text-sm text-muted-foreground italic">
+                  No organization types configured. Configure them in the Configuration section.
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>

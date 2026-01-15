@@ -41,6 +41,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/parameters/{key}").permitAll() // Allow public parameter access (e.g., logo)
                 .requestMatchers("/api/parameters/image/{key}").permitAll() // Allow public image access
+                .requestMatchers("/api/organization-types/active").permitAll() // Allow public org types for menu
+                .requestMatchers("/api/field-definitions/by-slug/{slug}").permitAll() // Allow public field definitions
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/error").permitAll() // Allow error endpoint for proper error handling
                 .requestMatchers("/api/**").authenticated()

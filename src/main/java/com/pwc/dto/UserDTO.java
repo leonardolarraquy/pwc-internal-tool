@@ -1,6 +1,8 @@
 package com.pwc.dto;
 
 import com.pwc.model.Role;
+import java.util.HashMap;
+import java.util.Map;
 
 public class UserDTO {
     private Long id;
@@ -9,31 +11,20 @@ public class UserDTO {
     private String company;
     private String email;
     private Role role;
-    private Boolean companyAssignmentsAccess;
-    private Boolean academicUnitAssignmentsAccess;
-    private Boolean giftAssignmentsAccess;
-    private Boolean locationAssignmentsAccess;
-    private Boolean projectAssignmentsAccess;
-    private Boolean grantAssignmentsAccess;
-    private Boolean paygroupAssignmentsAccess;
+    
+    // Dynamic organization access: key = organizationTypeId, value = hasAccess
+    private Map<Long, Boolean> organizationAccess = new HashMap<>();
     
     public UserDTO() {
     }
     
-    public UserDTO(Long id, String firstName, String lastName, String company, String email, Role role, Boolean companyAssignmentsAccess, Boolean academicUnitAssignmentsAccess, Boolean giftAssignmentsAccess, Boolean locationAssignmentsAccess, Boolean projectAssignmentsAccess, Boolean grantAssignmentsAccess, Boolean paygroupAssignmentsAccess) {
+    public UserDTO(Long id, String firstName, String lastName, String company, String email, Role role) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.company = company;
         this.email = email;
         this.role = role;
-        this.companyAssignmentsAccess = companyAssignmentsAccess;
-        this.academicUnitAssignmentsAccess = academicUnitAssignmentsAccess;
-        this.giftAssignmentsAccess = giftAssignmentsAccess;
-        this.locationAssignmentsAccess = locationAssignmentsAccess;
-        this.projectAssignmentsAccess = projectAssignmentsAccess;
-        this.grantAssignmentsAccess = grantAssignmentsAccess;
-        this.paygroupAssignmentsAccess = paygroupAssignmentsAccess;
     }
     
     public Long getId() {
@@ -84,59 +75,11 @@ public class UserDTO {
         this.role = role;
     }
     
-    public Boolean getCompanyAssignmentsAccess() {
-        return companyAssignmentsAccess;
+    public Map<Long, Boolean> getOrganizationAccess() {
+        return organizationAccess;
     }
     
-    public void setCompanyAssignmentsAccess(Boolean companyAssignmentsAccess) {
-        this.companyAssignmentsAccess = companyAssignmentsAccess;
-    }
-    
-    public Boolean getAcademicUnitAssignmentsAccess() {
-        return academicUnitAssignmentsAccess;
-    }
-    
-    public void setAcademicUnitAssignmentsAccess(Boolean academicUnitAssignmentsAccess) {
-        this.academicUnitAssignmentsAccess = academicUnitAssignmentsAccess;
-    }
-    
-    public Boolean getGiftAssignmentsAccess() {
-        return giftAssignmentsAccess;
-    }
-    
-    public void setGiftAssignmentsAccess(Boolean giftAssignmentsAccess) {
-        this.giftAssignmentsAccess = giftAssignmentsAccess;
-    }
-    
-    public Boolean getLocationAssignmentsAccess() {
-        return locationAssignmentsAccess;
-    }
-    
-    public void setLocationAssignmentsAccess(Boolean locationAssignmentsAccess) {
-        this.locationAssignmentsAccess = locationAssignmentsAccess;
-    }
-    
-    public Boolean getProjectAssignmentsAccess() {
-        return projectAssignmentsAccess;
-    }
-    
-    public void setProjectAssignmentsAccess(Boolean projectAssignmentsAccess) {
-        this.projectAssignmentsAccess = projectAssignmentsAccess;
-    }
-    
-    public Boolean getGrantAssignmentsAccess() {
-        return grantAssignmentsAccess;
-    }
-    
-    public void setGrantAssignmentsAccess(Boolean grantAssignmentsAccess) {
-        this.grantAssignmentsAccess = grantAssignmentsAccess;
-    }
-    
-    public Boolean getPaygroupAssignmentsAccess() {
-        return paygroupAssignmentsAccess;
-    }
-    
-    public void setPaygroupAssignmentsAccess(Boolean paygroupAssignmentsAccess) {
-        this.paygroupAssignmentsAccess = paygroupAssignmentsAccess;
+    public void setOrganizationAccess(Map<Long, Boolean> organizationAccess) {
+        this.organizationAccess = organizationAccess;
     }
 }

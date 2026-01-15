@@ -210,8 +210,8 @@ export const EmployeeDetails = () => {
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 max-w-full">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold">Employee Details</h1>
           <p className="text-muted-foreground">Manage employees and their information</p>
@@ -256,7 +256,7 @@ export const EmployeeDetails = () => {
       </div>
 
       {/* Employees Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

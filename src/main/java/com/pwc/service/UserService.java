@@ -1,5 +1,6 @@
 package com.pwc.service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,8 +18,12 @@ import com.pwc.dto.PageResponse;
 import com.pwc.dto.UserCreateDTO;
 import com.pwc.dto.UserDTO;
 import com.pwc.dto.UserUpdateDTO;
+import com.pwc.model.OrganizationType;
 import com.pwc.model.Role;
 import com.pwc.model.User;
+import com.pwc.model.UserOrganizationAccess;
+import com.pwc.repository.OrganizationTypeRepository;
+import com.pwc.repository.UserOrganizationAccessRepository;
 import com.pwc.repository.UserRepository;
 
 import jakarta.persistence.EntityManager;
@@ -29,13 +34,19 @@ public class UserService {
     
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserOrganizationAccessRepository userOrgAccessRepository;
+    private final OrganizationTypeRepository organizationTypeRepository;
     
     @PersistenceContext
     private EntityManager entityManager;
     
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                       UserOrganizationAccessRepository userOrgAccessRepository,
+                       OrganizationTypeRepository organizationTypeRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userOrgAccessRepository = userOrgAccessRepository;
+        this.organizationTypeRepository = organizationTypeRepository;
     }
     
     public LoginResponse authenticate(String email, String password) {
@@ -64,14 +75,14 @@ public class UserService {
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
         response.setMustChangePassword(mustChangePassword);
-        // Los getters ya manejan null como false
-        response.setCompanyAssignmentsAccess(user.getCompanyAssignmentsAccess());
-        response.setAcademicUnitAssignmentsAccess(user.getAcademicUnitAssignmentsAccess());
-        response.setGiftAssignmentsAccess(user.getGiftAssignmentsAccess());
-        response.setLocationAssignmentsAccess(user.getLocationAssignmentsAccess());
-        response.setProjectAssignmentsAccess(user.getProjectAssignmentsAccess());
-        response.setGrantAssignmentsAccess(user.getGrantAssignmentsAccess());
-        response.setPaygroupAssignmentsAccess(user.getPaygroupAssignmentsAccess());
+        
+        // Build dynamic organization access map
+        Map<Long, Boolean> orgAccess = new HashMap<>();
+        List<UserOrganizationAccess> accessList = userOrgAccessRepository.findByUserId(user.getId());
+        for (UserOrganizationAccess access : accessList) {
+            orgAccess.put(access.getOrganizationType().getId(), access.getHasAccess());
+        }
+        response.setOrganizationAccess(orgAccess);
         
         return response;
     }
@@ -120,13 +131,37 @@ public class UserService {
         }
         
         Page<User> userPage;
-        if (search != null && !search.trim().isEmpty()) {
-            userPage = userRepository.searchUsersWithAccessFilter(search.trim(), accessFilter, pageable);
-        } else {
-            if ("all".equals(accessFilter)) {
-                userPage = userRepository.findAll(pageable);
+        
+        if ("all".equals(accessFilter)) {
+            // No filter, return all users
+            if (search != null && !search.trim().isEmpty()) {
+                userPage = userRepository.searchUsers(search.trim(), pageable);
             } else {
-                userPage = userRepository.findAllWithAccessFilter(accessFilter, pageable);
+                userPage = userRepository.findAll(pageable);
+            }
+        } else if ("none".equals(accessFilter)) {
+            // Filter users with no access
+            if (search != null && !search.trim().isEmpty()) {
+                userPage = userRepository.searchUsersWithNoAccess(search.trim(), pageable);
+            } else {
+                userPage = userRepository.findUsersWithNoAccess(pageable);
+            }
+        } else {
+            // accessFilter is an organization type ID
+            try {
+                Long orgTypeId = Long.parseLong(accessFilter);
+                if (search != null && !search.trim().isEmpty()) {
+                    userPage = userRepository.searchUsersWithOrgTypeAccess(search.trim(), orgTypeId, pageable);
+                } else {
+                    userPage = userRepository.findAllWithOrgTypeAccess(orgTypeId, pageable);
+                }
+            } catch (NumberFormatException e) {
+                // Invalid filter, return all
+                if (search != null && !search.trim().isEmpty()) {
+                    userPage = userRepository.searchUsers(search.trim(), pageable);
+                } else {
+                    userPage = userRepository.findAll(pageable);
+                }
             }
         }
         
@@ -168,16 +203,12 @@ public class UserService {
             user.setPassword(null); // User must set password on first login
         }
         user.setRole(userCreateDTO.getRole() != null ? userCreateDTO.getRole() : Role.USER);
-        // Los campos de acceso pueden ser null, se manejarán como false en los getters
-        user.setCompanyAssignmentsAccess(userCreateDTO.getCompanyAssignmentsAccess());
-        user.setAcademicUnitAssignmentsAccess(userCreateDTO.getAcademicUnitAssignmentsAccess());
-        user.setGiftAssignmentsAccess(userCreateDTO.getGiftAssignmentsAccess());
-        user.setLocationAssignmentsAccess(userCreateDTO.getLocationAssignmentsAccess());
-        user.setProjectAssignmentsAccess(userCreateDTO.getProjectAssignmentsAccess());
-        user.setGrantAssignmentsAccess(userCreateDTO.getGrantAssignmentsAccess());
-        user.setPaygroupAssignmentsAccess(userCreateDTO.getPaygroupAssignmentsAccess());
         
         User savedUser = userRepository.save(user);
+        
+        // Save organization access
+        saveOrganizationAccess(savedUser, userCreateDTO.getOrganizationAccess());
+        
         return convertToDTO(savedUser);
     }
     
@@ -211,29 +242,14 @@ public class UserService {
         if (userUpdateDTO.getRole() != null) {
             user.setRole(userUpdateDTO.getRole());
         }
-        if (userUpdateDTO.getCompanyAssignmentsAccess() != null) {
-            user.setCompanyAssignmentsAccess(userUpdateDTO.getCompanyAssignmentsAccess());
-        }
-        if (userUpdateDTO.getAcademicUnitAssignmentsAccess() != null) {
-            user.setAcademicUnitAssignmentsAccess(userUpdateDTO.getAcademicUnitAssignmentsAccess());
-        }
-        if (userUpdateDTO.getGiftAssignmentsAccess() != null) {
-            user.setGiftAssignmentsAccess(userUpdateDTO.getGiftAssignmentsAccess());
-        }
-        if (userUpdateDTO.getLocationAssignmentsAccess() != null) {
-            user.setLocationAssignmentsAccess(userUpdateDTO.getLocationAssignmentsAccess());
-        }
-        if (userUpdateDTO.getProjectAssignmentsAccess() != null) {
-            user.setProjectAssignmentsAccess(userUpdateDTO.getProjectAssignmentsAccess());
-        }
-        if (userUpdateDTO.getGrantAssignmentsAccess() != null) {
-            user.setGrantAssignmentsAccess(userUpdateDTO.getGrantAssignmentsAccess());
-        }
-        if (userUpdateDTO.getPaygroupAssignmentsAccess() != null) {
-            user.setPaygroupAssignmentsAccess(userUpdateDTO.getPaygroupAssignmentsAccess());
-        }
         
         User updatedUser = userRepository.save(user);
+        
+        // Update organization access if provided
+        if (userUpdateDTO.getOrganizationAccess() != null && !userUpdateDTO.getOrganizationAccess().isEmpty()) {
+            saveOrganizationAccess(updatedUser, userUpdateDTO.getOrganizationAccess());
+        }
+        
         return convertToDTO(updatedUser);
     }
     
@@ -242,6 +258,7 @@ public class UserService {
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("User not found");
         }
+        // Organization access will be deleted automatically due to cascade
         userRepository.deleteById(id);
     }
     
@@ -258,21 +275,55 @@ public class UserService {
         return stats;
     }
     
+    private void saveOrganizationAccess(User user, Map<Long, Boolean> accessMap) {
+        if (accessMap == null || accessMap.isEmpty()) {
+            return;
+        }
+        
+        for (Map.Entry<Long, Boolean> entry : accessMap.entrySet()) {
+            Long orgTypeId = entry.getKey();
+            Boolean hasAccess = entry.getValue();
+            
+            OrganizationType orgType = organizationTypeRepository.findById(orgTypeId).orElse(null);
+            if (orgType == null) {
+                continue;
+            }
+            
+            // Check if access record exists
+            UserOrganizationAccess existingAccess = userOrgAccessRepository
+                    .findByUserIdAndOrganizationTypeId(user.getId(), orgTypeId)
+                    .orElse(null);
+            
+            if (existingAccess != null) {
+                // Update existing
+                existingAccess.setHasAccess(hasAccess != null ? hasAccess : false);
+                userOrgAccessRepository.save(existingAccess);
+            } else {
+                // Create new
+                UserOrganizationAccess newAccess = new UserOrganizationAccess(user, orgType, hasAccess != null ? hasAccess : false);
+                userOrgAccessRepository.save(newAccess);
+            }
+        }
+    }
+    
     private UserDTO convertToDTO(User user) {
-        return new UserDTO(
+        UserDTO dto = new UserDTO(
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
                 user.getCompany(),
                 user.getEmail(),
-                user.getRole(),
-                user.getCompanyAssignmentsAccess(),
-                user.getAcademicUnitAssignmentsAccess(),
-                user.getGiftAssignmentsAccess(),
-                user.getLocationAssignmentsAccess(),
-                user.getProjectAssignmentsAccess(),
-                user.getGrantAssignmentsAccess(),
-                user.getPaygroupAssignmentsAccess()
+                user.getRole()
         );
+        
+        // Build organization access map
+        Map<Long, Boolean> orgAccess = new HashMap<>();
+        List<UserOrganizationAccess> accessList = userOrgAccessRepository.findByUserId(user.getId());
+        for (UserOrganizationAccess access : accessList) {
+            orgAccess.put(access.getOrganizationType().getId(), access.getHasAccess());
+        }
+        dto.setOrganizationAccess(orgAccess);
+        
+        return dto;
     }
 }

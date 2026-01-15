@@ -48,9 +48,7 @@ export const Login = () => {
         firstName, 
         lastName, 
         mustChangePassword,
-        companyAssignmentsAccess,
-        academicUnitAssignmentsAccess,
-        giftAssignmentsAccess
+        organizationAccess
       } = response.data
       
       const userData = {
@@ -58,9 +56,7 @@ export const Login = () => {
         role,
         firstName,
         lastName,
-        companyAssignmentsAccess: companyAssignmentsAccess || false,
-        academicUnitAssignmentsAccess: academicUnitAssignmentsAccess || false,
-        giftAssignmentsAccess: giftAssignmentsAccess || false
+        organizationAccess: organizationAccess || {}
       }
       
       if (mustChangePassword) {

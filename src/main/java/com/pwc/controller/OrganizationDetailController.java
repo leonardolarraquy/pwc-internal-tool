@@ -2,9 +2,7 @@ package com.pwc.controller;
 
 import com.pwc.dto.*;
 import com.pwc.service.OrganizationDetailService;
-import com.pwc.service.GiftAssignmentService;
-import com.pwc.service.AcademicUnitAssignmentService;
-import com.pwc.service.CompanyAssignmentService;
+import com.pwc.service.AssignmentService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,23 +18,16 @@ import java.util.Map;
 public class OrganizationDetailController {
     
     private final OrganizationDetailService organizationDetailService;
-    private final GiftAssignmentService giftAssignmentService;
-    private final AcademicUnitAssignmentService academicUnitAssignmentService;
-    private final CompanyAssignmentService companyAssignmentService;
+    private final AssignmentService assignmentService;
     
     public OrganizationDetailController(
             OrganizationDetailService organizationDetailService,
-            GiftAssignmentService giftAssignmentService,
-            AcademicUnitAssignmentService academicUnitAssignmentService,
-            CompanyAssignmentService companyAssignmentService) {
+            AssignmentService assignmentService) {
         this.organizationDetailService = organizationDetailService;
-        this.giftAssignmentService = giftAssignmentService;
-        this.academicUnitAssignmentService = academicUnitAssignmentService;
-        this.companyAssignmentService = companyAssignmentService;
+        this.assignmentService = assignmentService;
     }
     
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PageResponse<OrganizationDetailDTO>> getAllOrganizationDetails(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size,
@@ -50,7 +41,6 @@ public class OrganizationDetailController {
     }
     
     @GetMapping("/organization-types")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getOrganizationTypes() {
         List<String> types = organizationDetailService.getDistinctOrganizationTypes();
         Map<String, Object> response = new HashMap<>();
@@ -97,84 +87,10 @@ public class OrganizationDetailController {
         return ResponseEntity.ok(response);
     }
     
-    @PostMapping("/{id}/assign-employee")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> assignEmployeeToOrganization(
-            @PathVariable Long id,
-            @Valid @RequestBody AssignUserToOrganizationDTO assignDTO) {
-        
-        OrganizationDetailDTO orgDetail = organizationDetailService.getOrganizationDetailById(id);
-        String organizationType = orgDetail.getOrganizationType();
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        if ("Gift".equalsIgnoreCase(organizationType)) {
-            GiftAssignmentCreateDTO createDTO = new GiftAssignmentCreateDTO();
-            createDTO.setEmployeeId(assignDTO.getUserId());
-            createDTO.setOrganizationDetailId(id);
-            createDTO.setFinGiftFinancialAnalyst(assignDTO.getFinGiftFinancialAnalyst());
-            createDTO.setFinGiftManager(assignDTO.getFinGiftManager());
-            createDTO.setFinProfessorshipPartnerGift(assignDTO.getFinProfessorshipPartnerGift());
-            
-            GiftAssignmentDTO assignment = giftAssignmentService.createGiftAssignment(createDTO);
-            response.put("assignment", assignment);
-            response.put("type", "Gift");
-        } else if ("Academic Unit".equalsIgnoreCase(organizationType)) {
-            AcademicUnitAssignmentCreateDTO createDTO = new AcademicUnitAssignmentCreateDTO();
-            createDTO.setEmployeeId(assignDTO.getUserId());
-            createDTO.setOrganizationDetailId(id);
-            createDTO.setHcmAcademicChairAu(assignDTO.getHcmAcademicChairAu());
-            createDTO.setHcmAcademicDeanAuh(assignDTO.getHcmAcademicDeanAuh());
-            createDTO.setHcmAcademicFacultyExecutiveAuh(assignDTO.getHcmAcademicFacultyExecutiveAuh());
-            createDTO.setHcmAcademicFacultyHrAnalystAu(assignDTO.getHcmAcademicFacultyHrAnalystAu());
-            createDTO.setHcmAcademicProvostPartnerAuh(assignDTO.getHcmAcademicProvostPartnerAuh());
-            createDTO.setHcmAcademicSchoolDirectorAuh(assignDTO.getHcmAcademicSchoolDirectorAuh());
-            
-            AcademicUnitAssignmentDTO assignment = academicUnitAssignmentService.createAcademicUnitAssignment(createDTO);
-            response.put("assignment", assignment);
-            response.put("type", "AcademicUnit");
-        } else if ("Company".equalsIgnoreCase(organizationType)) {
-            CompanyAssignmentCreateDTO createDTO = new CompanyAssignmentCreateDTO();
-            createDTO.setEmployeeId(assignDTO.getUserId());
-            createDTO.setOrganizationDetailId(id);
-            
-            CompanyAssignmentDTO assignment = companyAssignmentService.createCompanyAssignment(createDTO);
-            response.put("assignment", assignment);
-            response.put("type", "Company");
-        } else {
-            throw new RuntimeException("Cannot assign employee to organization of type: " + organizationType);
-        }
-        
-        response.put("message", "Employee successfully assigned to organization");
-        return ResponseEntity.ok(response);
-    }
-    
     @GetMapping("/{id}/assignments")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> getOrganizationAssignments(@PathVariable Long id) {
-        OrganizationDetailDTO orgDetail = organizationDetailService.getOrganizationDetailById(id);
-        String organizationType = orgDetail.getOrganizationType();
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        if ("Gift".equalsIgnoreCase(organizationType)) {
-            response.put("assignments", giftAssignmentService.getGiftAssignmentsByOrganizationDetail(id));
-            response.put("type", "Gift");
-        } else if ("Academic Unit".equalsIgnoreCase(organizationType)) {
-            response.put("assignments", academicUnitAssignmentService.getAcademicUnitAssignmentsByOrganizationDetail(id));
-            response.put("type", "AcademicUnit");
-        } else if ("Company".equalsIgnoreCase(organizationType)) {
-            response.put("assignments", companyAssignmentService.getCompanyAssignmentsByOrganizationDetail(id));
-            response.put("type", "Company");
-        } else {
-            response.put("assignments", java.util.Collections.emptyList());
-            response.put("type", "Unknown");
-        }
-        
-        return ResponseEntity.ok(response);
+    public ResponseEntity<List<AssignmentDTO>> getOrganizationAssignments(@PathVariable Long id) {
+        List<AssignmentDTO> assignments = assignmentService.getAssignmentsByOrgDetailId(id);
+        return ResponseEntity.ok(assignments);
     }
 }
-
-
-
-

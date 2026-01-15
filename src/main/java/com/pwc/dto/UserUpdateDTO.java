@@ -2,6 +2,8 @@ package com.pwc.dto;
 
 import com.pwc.model.Role;
 import jakarta.validation.constraints.Email;
+import java.util.HashMap;
+import java.util.Map;
 
 public class UserUpdateDTO {
     private String firstName;
@@ -13,13 +15,9 @@ public class UserUpdateDTO {
     
     private String password;
     private Role role;
-    private Boolean companyAssignmentsAccess;
-    private Boolean academicUnitAssignmentsAccess;
-    private Boolean giftAssignmentsAccess;
-    private Boolean locationAssignmentsAccess;
-    private Boolean projectAssignmentsAccess;
-    private Boolean grantAssignmentsAccess;
-    private Boolean paygroupAssignmentsAccess;
+    
+    // Dynamic organization access: key = organizationTypeId, value = hasAccess
+    private Map<Long, Boolean> organizationAccess = new HashMap<>();
     
     public UserUpdateDTO() {
     }
@@ -72,59 +70,11 @@ public class UserUpdateDTO {
         this.role = role;
     }
     
-    public Boolean getCompanyAssignmentsAccess() {
-        return companyAssignmentsAccess;
+    public Map<Long, Boolean> getOrganizationAccess() {
+        return organizationAccess;
     }
     
-    public void setCompanyAssignmentsAccess(Boolean companyAssignmentsAccess) {
-        this.companyAssignmentsAccess = companyAssignmentsAccess;
-    }
-    
-    public Boolean getAcademicUnitAssignmentsAccess() {
-        return academicUnitAssignmentsAccess;
-    }
-    
-    public void setAcademicUnitAssignmentsAccess(Boolean academicUnitAssignmentsAccess) {
-        this.academicUnitAssignmentsAccess = academicUnitAssignmentsAccess;
-    }
-    
-    public Boolean getGiftAssignmentsAccess() {
-        return giftAssignmentsAccess;
-    }
-    
-    public void setGiftAssignmentsAccess(Boolean giftAssignmentsAccess) {
-        this.giftAssignmentsAccess = giftAssignmentsAccess;
-    }
-    
-    public Boolean getLocationAssignmentsAccess() {
-        return locationAssignmentsAccess;
-    }
-    
-    public void setLocationAssignmentsAccess(Boolean locationAssignmentsAccess) {
-        this.locationAssignmentsAccess = locationAssignmentsAccess;
-    }
-    
-    public Boolean getProjectAssignmentsAccess() {
-        return projectAssignmentsAccess;
-    }
-    
-    public void setProjectAssignmentsAccess(Boolean projectAssignmentsAccess) {
-        this.projectAssignmentsAccess = projectAssignmentsAccess;
-    }
-    
-    public Boolean getGrantAssignmentsAccess() {
-        return grantAssignmentsAccess;
-    }
-    
-    public void setGrantAssignmentsAccess(Boolean grantAssignmentsAccess) {
-        this.grantAssignmentsAccess = grantAssignmentsAccess;
-    }
-    
-    public Boolean getPaygroupAssignmentsAccess() {
-        return paygroupAssignmentsAccess;
-    }
-    
-    public void setPaygroupAssignmentsAccess(Boolean paygroupAssignmentsAccess) {
-        this.paygroupAssignmentsAccess = paygroupAssignmentsAccess;
+    public void setOrganizationAccess(Map<Long, Boolean> organizationAccess) {
+        this.organizationAccess = organizationAccess;
     }
 }
