@@ -79,6 +79,13 @@ export const Assignments = () => {
   // Load organization type and field definitions when slug changes
   useEffect(() => {
     if (orgTypeSlug) {
+      // Clear state when switching to a different org type
+      setSaveResults(null)
+      setAssignmentData({})
+      assignmentDataRef.current = {}
+      setAllOrganizationDetails([])
+      setFilteredOrganizationDetails([])
+      setOrganizationSearchInput('')
       loadOrgTypeAndFields()
     }
   }, [orgTypeSlug])
@@ -86,6 +93,9 @@ export const Assignments = () => {
   // Load data when mode or pagination changes
   useEffect(() => {
     if (orgType) {
+      // Clear save results when mode changes
+      setSaveResults(null)
+      
       if (mode === 'show') {
         loadAssignments()
       } else if (mode === 'assign') {
